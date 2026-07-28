@@ -1,0 +1,2405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Duckly - 日程管理应用</title>
+  <!-- 字体 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" as="style">
+  <!-- Design Token 全局变量 -->
+  <style>
+    :root {
+      /* 色彩系统 */
+      --bg-beige:#F4EFEA;--white:#FFF;--dark-gray:#383838;--medium-gray:#666;--light-gray:#e0e0e0;
+      --blue:#6FC2FF;--cyan:#4DD4D0;--yellow:#FFD500;--coral:#FF6B6B;
+      --orange-primary:#FF9500;--orange-secondary:#FF6B00;--pink:#FFB6C1;
+      --coral-dark:#c53030;--blue-dark:#1a6bb5;
+      /* 字体 */
+      --font-sans:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+      --font-mono:'Monaco','Courier New',monospace;
+      /* 间距 4px基准 */
+      --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;
+      --space-8:32px;--space-10:40px;--space-12:48px;--space-16:64px;--space-20:80px;
+      /* 圆角 */
+      --radius-none:0px;--radius-sm:3px;--radius:4px;--radius-lg:8px;--radius-full:9999px;
+      /* 阴影 */
+      --shadow-brutal:4px 4px 0 0 var(--dark-gray);
+      --shadow-brutal-active:2px 2px 0 0 var(--dark-gray);
+      --shadow-lg:0 10px 15px -3px rgba(0,0,0,.1);
+      --shadow-2xl:0 25px 50px -12px rgba(0,0,0,.25);
+      /* 全局边框规范：所有组件统一2px深色边框 */
+      --border-default:2px solid var(--dark-gray);
+      /* 全局过渡动画 */
+      --t:0.15s cubic-bezier(0.4,0,0.2,1);
+      --code-header:#2D2D2D;
+      /* 暗黑模式色彩（默认与亮色相同，.dark 下覆盖） */
+      --bg-page:var(--bg-beige);--bg-card:var(--white);--bg-input:var(--white);
+      --bg-hover:#f9f9f9;--bg-today:#FFF9E6;--bg-dropdown-hover:var(--yellow);
+      --text-primary:var(--dark-gray);--text-secondary:var(--medium-gray);
+      --border-color:var(--dark-gray);
+    }
+    :root.dark {
+      --bg-beige:#1b1b1e;--white:#26262a;--dark-gray:#e8e8ea;--medium-gray:#8e8e98;--light-gray:#38383e;
+      --blue:#5ab0ff;--cyan:#45d5d0;--yellow:#f0cc00;--coral:#ff6b6b;
+      --orange-primary:#ff9f1a;--orange-secondary:#e66800;--pink:#d4607a;
+      --coral-dark:#d94141;--blue-dark:#2a7fcc;
+      --shadow-brutal:4px 4px 0 0 #3a3a42;
+      --shadow-brutal-active:2px 2px 0 0 #3a3a42;
+      --shadow-lg:0 10px 15px -3px rgba(0,0,0,.5);
+      --shadow-2xl:0 25px 50px -12px rgba(0,0,0,.6);
+      --border-default:2px solid var(--dark-gray);
+      --code-header:#121214;
+      --bg-page:var(--bg-beige);--bg-card:var(--white);--bg-input:#1e1e22;
+      --bg-hover:#1e1e22;--bg-today:#33333a;--bg-dropdown-hover:var(--yellow);
+      --text-primary:var(--dark-gray);--text-secondary:var(--medium-gray);
+      --border-color:var(--dark-gray);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{color-scheme:light}:root.dark{color-scheme:dark}
+    /* 限定过渡范围避免全量重绘 */
+    .btn,.dropdown-toggle,.drawer,.toast,.task-item,.drawer-toggle,.calendar-cell,.settings-btn,.notif-btn,.calendar-nav-btn,.calendar-today-btn,.quadrant-add-btn,.tab-btn,.year-month-card{transition:background .15s,color .15s,border-color .15s,box-shadow .15s}
+    body{font-family:var(--font-sans);color:var(--text-primary, #383838);background:var(--bg-page, #F4EFEA);line-height:1.5;-webkit-font-smoothing:antialiased;transition:background var(--t),color var(--t)}
+    /* 页面容器 */
+    .page-wrap{max-width:1440px;margin:0 auto;padding:var(--space-8) var(--space-6)}
+    @media(min-width:1024px){.page-wrap{padding:var(--space-12) var(--space-6)}}
+    /* 通用卡片 */
+    .card{background:var(--white);border:var(--border-default);border-radius:var(--radius);padding:var(--space-6)}
+    /* 网格布局 */
+    .grid-2{display:grid;grid-template-columns:1fr;gap:var(--space-6)}
+    @media(min-width:1024px){.grid-2{grid-template-columns:repeat(2,1fr)}}
+    /* 四象限专用网格 */
+    .quadrant-grid{display:grid;grid-template-columns:1fr;gap:var(--space-4)}
+    @media(min-width:640px){.quadrant-grid{grid-template-columns:repeat(2,1fr)}}
+    /* 按钮基础样式（复用token） */
+    .btn{display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-sans);font-size:14px;font-weight:700;text-transform:uppercase;padding:var(--space-3) var(--space-8);border:var(--border-default);border-radius:var(--radius-none);cursor:pointer;background:var(--white);color:var(--dark-gray);transition:transform var(--t);gap:var(--space-2)}
+    .btn svg{display:block;flex-shrink:0}
+    .btn:hover{transform:translate(-1px,-1px);box-shadow:var(--shadow-brutal)}
+    .btn:active{transform:translate(-2px,-2px);box-shadow:var(--shadow-brutal-active)}
+    .btn-primary{background:var(--blue);color:var(--dark-gray)}
+    .btn-primary .icon{color:var(--dark-gray)}
+    .btn-danger{background:var(--coral-dark);color:var(--white)}
+    .btn-warning{background:var(--yellow)}
+    .btn-cyan{background:var(--cyan)}
+    .btn-small{padding:var(--space-2) var(--space-4);font-size:13px;min-height:44px}
+    .btn:focus-visible,.dropdown-toggle:focus-visible,.settings-btn:focus-visible,.notif-btn:focus-visible,.calendar-nav-btn:focus-visible,.task-btn-edit:focus-visible,.task-btn-delete:focus-visible,.quadrant-add-btn:focus-visible,.tab-btn:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+    /* 输入框 */
+    .form-input{display:block;width:100%;font-family:var(--font-sans);font-size:16px;color:var(--dark-gray);padding:var(--space-3) var(--space-5);border:var(--border-default);border-radius:var(--radius-none);background:var(--white);outline:none;transition:box-shadow var(--t)}
+    .form-input:focus{box-shadow:0 0 0 2px var(--blue)}
+    .form-input::placeholder{color:var(--light-gray)}
+    /* 下拉菜单 */
+    .dropdown-toggle{display:inline-flex;align-items:center;gap:var(--space-1);padding:var(--space-2) var(--space-3);border:var(--border-default);border-radius:var(--radius-none);background:var(--white);color:var(--dark-gray);font-family:var(--font-sans);font-size:14px;font-weight:700;text-transform:uppercase;cursor:pointer;transition:transform var(--t)}
+    .dropdown-toggle:hover{transform:translate(-1px,-1px);box-shadow:var(--shadow-brutal)}
+    .dropdown-menu{position:absolute;right:0;top:100%;margin-top:4px;width:160px;background:var(--white);border:var(--border-default);box-shadow:var(--shadow-brutal);z-index:20;display:none}
+    .dropdown-item{display:block;width:100%;text-align:left;padding:var(--space-2) var(--space-3);font-family:var(--font-sans);font-size:14px;font-weight:700;color:var(--dark-gray);background:transparent;border:none;cursor:pointer;transition:all var(--t)}
+    .dropdown-item:hover{background:var(--yellow)}
+    .dropdown-item.active{background:var(--dark-gray);color:var(--white);font-weight:700}
+    /* 任务条目 */
+    .task-item{display:flex;align-items:flex-start;gap:var(--space-3);border:var(--border-default);padding:var(--space-4);background:var(--white);cursor:move;transition:background-color .15s}
+    .task-item:hover{background:var(--bg-hover)}
+    .task-checkbox{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:2px solid var(--dark-gray);border-radius:var(--radius-sm);background:var(--white);cursor:pointer;-webkit-appearance:none;appearance:none;flex-shrink:0;margin:-12px 0 -12px -12px;background-clip:content-box;padding:12px}
+    .task-checkbox:checked{background:var(--dark-gray)}
+    .task-text{flex:1;font-size:14px;font-weight:500;line-height:1.625;color:var(--dark-gray);word-break:break-word;min-width:0}
+    .task-text.completed{text-decoration:line-through;opacity:.6}
+    .task-actions{display:flex;gap:var(--space-2);flex-shrink:0}
+    .task-btn-edit,.task-btn-delete{display:flex;align-items:center;justify-content:center;width:44px;height:44px;background:transparent;border:none;cursor:pointer;transition:color var(--t);flex-shrink:0}
+    .task-btn-edit{color:var(--dark-gray)}.task-btn-edit:hover{color:var(--blue)}
+    .task-btn-delete{color:var(--coral)}.task-btn-delete:hover{color:var(--coral)}
+    /* 象限卡片 */
+    .quadrant-card{background:var(--white);border:var(--border-default);border-radius:var(--radius);padding:var(--space-6);min-height:320px;display:flex;flex-direction:column}
+    .quadrant-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-6)}
+    .quadrant-title-row{display:flex;align-items:center;gap:var(--space-3)}
+    .quadrant-dot{width:16px;height:16px;border:2px solid var(--dark-gray);flex-shrink:0}
+    .quadrant-dot.coral{background:var(--coral)}.quadrant-dot.blue{background:var(--blue)}
+    .quadrant-dot.yellow{background:var(--yellow)}.quadrant-dot.cyan{background:var(--cyan)}
+    .quadrant-title{font-size:24px;font-weight:700;letter-spacing:-.025em;color:var(--dark-gray)}
+    .quadrant-subtitle{font-size:14px;color:var(--medium-gray)}
+    .quadrant-add-btn{padding:var(--space-2) var(--space-4);font-family:var(--font-sans);font-size:12px;font-weight:700;text-transform:uppercase;border:var(--border-default);border-radius:var(--radius-none);cursor:pointer;transition:all var(--t)}
+    .quadrant-add-btn:hover{transform:translate(-2px,-2px);box-shadow:var(--shadow-brutal)}
+    .quadrant-add-btn.coral{background:var(--coral-dark);color:var(--white)}.quadrant-add-btn.blue{background:var(--blue-dark);color:var(--white)}
+    .quadrant-add-btn.yellow{background:var(--yellow)}.quadrant-add-btn.cyan{background:var(--cyan)}
+    .drop-zone{flex:1;min-height:120px;overflow-y:auto;display:flex;flex-direction:column;gap:var(--space-3)}
+    /* 标签组件 */
+    .tag{display:inline-flex;align-items:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:var(--space-1) var(--space-3);color:var(--dark-gray);border:var(--border-default)}
+    .tag-group{display:flex;gap:var(--space-3);flex-wrap:wrap}
+    .tag-pill{border-radius:var(--radius-full)}
+    /* 模态弹窗 */
+    .modal-overlay{position:fixed;inset:0;background:rgba(56,56,56,.5);display:none;align-items:center;justify-content:center;z-index:50;padding:var(--space-4);overflow-y:auto}
+    .modal-overlay.open{display:flex}
+    .modal-content{background:var(--white);border:var(--border-default);max-width:1152px;width:100%;margin:var(--space-8) 0;max-height:90vh;overflow-y:auto}
+    .modal-header{display:flex;align-items:center;justify-content:space-between;padding:var(--space-8) var(--space-8) var(--space-6);position:sticky;top:0;background:var(--white);z-index:10;border-bottom:var(--border-default)}
+    .modal-title{font-size:30px;font-weight:700;letter-spacing:-.025em;color:var(--dark-gray)}
+    .modal-close{font-size:30px;font-weight:700;color:var(--dark-gray);background:transparent;border:none;cursor:pointer;transition:opacity var(--t);display:flex;align-items:center;justify-content:center;width:44px;height:44px}
+    .modal-close:hover{opacity:.7}
+    .modal-body{padding:0 var(--space-8) var(--space-8)}
+    /* 统计卡片 */
+    .stats-summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-4);margin-bottom:var(--space-8)}
+    .stat-card{background:var(--bg-beige);border:var(--border-default);border-radius:var(--radius);padding:var(--space-4);text-align:center}
+    .stat-value{font-size:36px;font-weight:700}
+    .stat-value.dark{color:var(--dark-gray)}.stat-value.cyan{color:var(--cyan)}
+    .stat-value.yellow{color:var(--yellow)}.stat-value.blue{color:var(--blue)}
+    .stat-label{font-size:14px;color:var(--medium-gray);margin-top:4px}
+    /* Tab切换栏 */
+    .tab-bar{display:flex;gap:var(--space-3);margin:var(--space-4) 0 var(--space-8)}
+    .tab-btn{display:inline-flex;align-items:center;gap:var(--space-2);padding:12px 24px;font-family:var(--font-sans);font-size:14px;font-weight:700;text-transform:uppercase;border:var(--border-default);border-radius:var(--radius-none);cursor:pointer;transition:background var(--t)}
+    .tab-btn svg{display:block;flex-shrink:0}
+    .tab-btn.active{background:var(--blue)}.tab-btn:not(.active){background:var(--white)}
+    /* 分割线 */
+    .divider{height:0;border:none;border-top:2px solid var(--light-gray);margin:var(--space-8) 0}
+    /* 顶部导航栏 */
+    .app-header{background:var(--white);border:var(--border-default);padding:var(--space-4) var(--space-6);position:sticky;top:0;z-index:30}
+    .header-row{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap}
+    .header-left{display:flex;align-items:center;gap:var(--space-6)}
+    .logo-group{display:flex;align-items:center;gap:var(--space-3)}
+    .app-title{font-size:32px;font-weight:700;letter-spacing:-.025em}
+    .header-right{display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap}
+    /* 空状态 */
+    .empty-tip{text-align:center;padding:var(--space-8);color:var(--medium-gray);font-size:14px}
+    /* 网络状态提示 */
+    .network-badge{position:fixed;bottom:var(--space-4);right:var(--space-4);padding:var(--space-2) var(--space-4);background:var(--white);border:var(--border-default);font-size:12px;font-weight:700;z-index:40;display:flex;align-items:center;gap:var(--space-2)}
+    /* ===== 日历视图样式 ===== */
+    .calendar-section{display:none}
+    .calendar-section.active{display:block}
+    .calendar-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-6);flex-wrap:wrap;gap:var(--space-4)}
+    .calendar-nav{display:flex;align-items:center;gap:var(--space-4)}
+    .calendar-nav-btn{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:var(--border-default);background:var(--white);cursor:pointer;transition:transform var(--t)}
+    .calendar-nav-btn:hover{transform:translate(-1px,-1px);box-shadow:var(--shadow-brutal)}
+    .calendar-nav-btn:active{transform:translate(-2px,-2px);box-shadow:var(--shadow-brutal-active)}
+    .calendar-month-year{font-size:28px;font-weight:700;letter-spacing:-.025em;min-width:200px;text-align:center}
+    .calendar-today-btn{display:inline-flex;align-items:center;gap:var(--space-2);padding:8px 20px;font-family:var(--font-sans);font-size:13px;font-weight:700;text-transform:uppercase;border:var(--border-default);background:var(--white);cursor:pointer;transition:transform var(--t)}
+    .calendar-today-btn:hover{transform:translate(-1px,-1px);box-shadow:var(--shadow-brutal)}
+    .calendar-today-btn:active{transform:translate(-2px,-2px);box-shadow:var(--shadow-brutal-active)}
+    .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);border:var(--border-default);background:var(--dark-gray);gap:2px;position:relative}
+    .calendar-weekday{padding:var(--space-3) var(--space-2);text-align:center;font-weight:700;font-size:13px;text-transform:uppercase;background:var(--white);color:var(--dark-gray)}
+    .calendar-weekday.weekend{color:var(--coral)}
+    .calendar-cell{background:var(--white);min-height:120px;padding:var(--space-2);display:flex;flex-direction:column;cursor:pointer;transition:background var(--t);position:relative}
+    .calendar-cell:hover{background:var(--bg-hover)}
+    .calendar-cell.other-month{opacity:.35;pointer-events:none}
+    .calendar-cell.today{background:var(--bg-today);box-shadow:inset 0 0 0 2px var(--orange-primary)}
+    .calendar-cell.has-task{cursor:pointer}
+    .calendar-day-number{font-size:14px;font-weight:700;margin-bottom:var(--space-1);line-height:1}
+    .calendar-cell.today .calendar-day-number{display:flex;align-items:center;justify-content:center;width:26px;height:26px;background:var(--orange-primary);color:var(--white);border-radius:var(--radius-full)}
+    .calendar-cell-tasks{display:flex;flex-direction:column;gap:2px;flex:1}
+    .cal-task{display:flex;align-items:center;gap:4px;padding:2px 4px;font-size:11px;font-weight:600;border-radius:var(--radius-sm);cursor:pointer;transition:opacity var(--t);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .cal-task:hover{opacity:.8}
+    .cal-task .cal-task-dot{width:6px;height:6px;border-radius:var(--radius-full);flex-shrink:0}
+    .cal-task .cal-task-dot.coral{background:var(--coral)}
+    .cal-task .cal-task-dot.blue{background:var(--blue)}
+    .cal-task .cal-task-dot.yellow{background:var(--yellow)}
+    .cal-task .cal-task-dot.cyan{background:var(--cyan)}
+    .cal-task .cal-task-done{background:var(--medium-gray)}
+    .cal-task-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .cal-task-done .cal-task-text{text-decoration:line-through;opacity:.6}
+    .cal-more-link{font-size:11px;font-weight:700;color:var(--medium-gray);padding:2px 4px;cursor:pointer}
+    .cal-more-link:hover{color:var(--dark-gray)}
+    /* 跨多日事件横条 */
+    /* 跨多日事件 — 覆盖式横条 */
+    .cal-multi-overlay{position:absolute;z-index:5;height:22px;display:flex;align-items:center;padding:0 8px;font-size:11px;font-weight:700;border-radius:var(--radius-sm);cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;border:2px solid var(--dark-gray);pointer-events:auto;box-shadow:var(--shadow-brutal)}
+    .cal-multi-overlay.blue{background:var(--blue-dark);color:var(--white)}
+    .cal-multi-overlay.coral{background:var(--coral-dark);color:var(--white)}
+    .cal-multi-overlay.yellow{background:var(--yellow);color:var(--dark-gray)}
+    .cal-multi-overlay.cyan{background:var(--cyan);color:var(--dark-gray)}
+    .cal-multi-overlay.done{opacity:.5;text-decoration:line-through}
+    /* 日历侧边 - 日程详情 */
+    .calendar-layout{display:grid;grid-template-columns:1fr;gap:var(--space-6)}
+    @media(min-width:1024px){.calendar-layout{grid-template-columns:1fr 320px}}
+    .calendar-sidebar{display:flex;flex-direction:column;gap:var(--space-4)}
+    .cal-sidebar-card{background:var(--white);border:var(--border-default);border-radius:var(--radius);padding:var(--space-5)}
+    .cal-sidebar-title{font-size:18px;font-weight:700;margin-bottom:var(--space-4);display:flex;align-items:center;gap:var(--space-2)}
+    .cal-sidebar-task-item{display:flex;align-items:flex-start;gap:var(--space-3);padding:var(--space-3) 0;border-bottom:1px solid var(--light-gray)}
+    .cal-sidebar-task-item:last-child{border-bottom:none}
+    .cal-sidebar-time{font-size:12px;font-weight:700;color:var(--medium-gray);flex-shrink:0;min-width:44px;padding-top:1px}
+    .cal-sidebar-task-info{flex:1;min-width:0}
+    .cal-sidebar-task-title{font-size:14px;font-weight:600}
+    .cal-sidebar-task-tag{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:1px 6px;border:var(--border-default);border-radius:var(--radius-sm)}
+    /* ===== 年视图样式 ===== */
+    .year-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-4)}
+    @media(max-width:1024px){.year-grid{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:640px){.year-grid{grid-template-columns:repeat(2,1fr)}}
+    .year-month-card{background:var(--white);border:var(--border-default);border-radius:var(--radius);padding:var(--space-4);cursor:pointer;transition:transform var(--t),box-shadow var(--t)}
+    .year-month-card:hover{transform:translate(-2px,-2px);box-shadow:var(--shadow-brutal)}
+    .year-month-card:active{transform:translate(-1px,-1px)}
+    .year-month-title{font-size:16px;font-weight:700;text-align:center;margin-bottom:var(--space-2);color:var(--dark-gray)}
+    .year-month-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;margin-bottom:1px}
+    .year-month-weekday{text-align:center;font-size:9px;font-weight:700;color:var(--medium-gray);padding:1px 0}
+    .year-month-weekday.weekend{color:var(--coral)}
+    .year-month-days{display:grid;grid-template-columns:repeat(7,1fr);gap:1px}
+    .year-month-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;border-radius:var(--radius-sm);color:var(--dark-gray);position:relative}
+    .year-month-day.other-month{opacity:.2;pointer-events:none}
+    .year-month-day.today{background:var(--orange-primary);color:var(--white);font-weight:700}
+    .year-month-day.has-task::after{content:'';position:absolute;bottom:2px;width:4px;height:4px;border-radius:50%;background:var(--coral)}
+    .year-month-day.has-task-blue::after{background:var(--blue)}
+    .year-month-day.has-task-yellow::after{background:var(--yellow)}
+    .year-month-day.has-task-cyan::after{background:var(--cyan)}
+    .year-month-day.selected{box-shadow:inset 0 0 0 1.5px var(--dark-gray)}
+    .year-month-summary{display:flex;justify-content:center;gap:var(--space-3);margin-top:var(--space-2);font-size:10px;color:var(--medium-gray)}
+    .year-month-summary span{display:inline-flex;align-items:center;gap:2px}
+    .year-month-summary .dot{width:5px;height:5px;border-radius:50%;display:inline-block}
+    /* ===== 周视图样式 ===== */
+    .week-view{display:none}
+    .week-view.active{display:block}
+    .week-grid{display:grid;grid-template-columns:80px repeat(7,1fr);border:var(--border-default);background:var(--dark-gray);gap:2px;overflow-x:auto}
+    .week-time-cell{background:var(--white);min-height:60px;padding:4px;font-size:11px;font-weight:700;color:var(--medium-gray);display:flex;align-items:flex-start;justify-content:center}
+    .week-day-header{background:var(--white);padding:var(--space-2);text-align:center;font-weight:700;min-height:60px}
+    .week-day-header .wd-name{font-size:12px;color:var(--medium-gray);text-transform:uppercase}
+    .week-day-header .wd-date{font-size:20px;margin-top:2px}
+    .week-day-header.today .wd-date{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:var(--orange-primary);color:var(--white);border-radius:var(--radius-full)}
+    .week-day-header.weekend .wd-name{color:var(--coral)}
+    .week-day-col{background:var(--white);min-height:60px;padding:var(--space-1);display:flex;flex-direction:column;gap:2px}
+    .week-day-col.today-col{background:var(--bg-today)}
+    .week-task{font-size:10px;font-weight:600;padding:3px 4px;border-radius:var(--radius-sm);cursor:pointer;line-height:1.3;border-left:3px solid var(--coral);background:var(--bg-card);overflow:hidden}
+    .week-task.blue{border-left-color:var(--blue)}
+    .week-task.yellow{border-left-color:var(--yellow)}
+    .week-task.cyan{border-left-color:var(--cyan)}
+    .week-task.done{opacity:.5;text-decoration:line-through}
+    .week-task-time{font-size:9px;color:var(--medium-gray);font-weight:400}
+    .week-multi-events{display:flex;flex-direction:column;gap:var(--space-2);margin-bottom:var(--space-2)}
+    .week-multi-bar{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;border:2px solid var(--dark-gray);color:var(--white);line-height:1.4}
+    .week-multi-bar.blue{background:var(--blue-dark)}.week-multi-bar.coral{background:var(--coral-dark)}
+    .week-multi-bar.yellow{background:var(--yellow);color:var(--dark-gray)}.week-multi-bar.cyan{background:var(--cyan);color:var(--dark-gray)}
+    .week-multi-bar.done{opacity:.5;text-decoration:line-through}
+    .week-multi-bar .wm-range{font-size:10px;font-weight:400;opacity:.8;margin-left:auto;flex-shrink:0}
+    /* ===== 日视图/日程样式 ===== */
+    .day-view{display:none}
+    .day-view.active{display:block}
+    .day-timeline{display:grid;grid-template-columns:64px 1fr;border:var(--border-default);background:var(--dark-gray);gap:2px}
+    .day-hour-label{background:var(--white);padding:10px 6px;font-size:11px;font-weight:700;color:var(--medium-gray);text-align:right;min-height:52px}
+    .day-hour-cell{background:var(--white);min-height:52px;padding:4px 8px;position:relative}
+    .day-hour-cell.current{background:var(--bg-today)}
+    .day-task-block{display:flex;align-items:center;gap:8px;padding:4px 8px;margin:2px 0;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;border-left:4px solid var(--coral);background:var(--bg-hover)}
+    .day-task-block.blue{border-left-color:var(--blue)}
+    .day-task-block.yellow{border-left-color:var(--yellow)}
+    .day-task-block.cyan{border-left-color:var(--cyan)}
+    .day-task-block.done{opacity:.5;text-decoration:line-through}
+    .day-task-block .dt-time{font-size:10px;color:var(--medium-gray);font-weight:400;flex-shrink:0;min-width:36px}
+    .day-task-block .dt-tag{font-size:9px;font-weight:700;padding:1px 5px;border:1px solid var(--dark-gray);border-radius:var(--radius-sm);flex-shrink:0}
+    .day-multi-events{display:flex;flex-direction:column;gap:var(--space-2);margin-bottom:var(--space-2)}
+    .day-multi-bar{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;border:2px solid var(--dark-gray);color:var(--white)}
+    .day-multi-bar.blue{background:var(--blue-dark)}.day-multi-bar.coral{background:var(--coral-dark)}
+    .day-multi-bar.yellow{background:var(--yellow);color:var(--dark-gray)}.day-multi-bar.cyan{background:var(--cyan);color:var(--dark-gray)}
+    .day-multi-bar.done{opacity:.5;text-decoration:line-through}
+    .dm-icon{width:16px;height:16px;flex-shrink:0;display:block}
+    .day-multi-bar .dm-range{font-size:10px;font-weight:400;opacity:.8;margin-left:auto;flex-shrink:0}
+    /* Icon基础样式 */
+    .icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+    .icon-16{width:16px;height:16px}
+    .icon-18{width:18px;height:18px}
+    .icon-20{width:20px;height:20px}
+    .icon-24{width:24px;height:24px}
+    .icon-32{width:32px;height:32px}
+    .btn .icon{width:16px;height:16px}
+    .tab-btn .icon{width:18px;height:18px}
+    .dropdown-toggle .icon{width:16px;height:16px}
+    .task-btn-edit .icon,.task-btn-delete .icon{width:16px;height:16px;display:block}
+    .logo-icon{width:40px;height:40px;display:block;border:var(--border-default);border-radius:var(--radius-full)}
+    /* ===== 左侧设置抽屉 ===== */
+    .drawer-overlay{position:fixed;inset:0;background:rgba(56,56,56,.5);z-index:60;display:none}
+    .drawer-overlay.open{display:block}
+    .drawer{position:fixed;top:0;right:0;bottom:0;width:360px;max-width:90vw;background:var(--white);border-left:var(--border-default);z-index:70;transform:translateX(100%);transition:transform .25s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;overflow:hidden}
+    .drawer.open{transform:translateX(0)}
+    .drawer-header{display:flex;align-items:center;justify-content:space-between;padding:var(--space-6);border-bottom:var(--border-default);flex-shrink:0}
+    .drawer-header-title{display:flex;align-items:center;gap:var(--space-3);font-size:24px;font-weight:700}
+    .drawer-close{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border:var(--border-default);background:var(--white);cursor:pointer;transition:transform var(--t)}
+    .drawer-close:hover{transform:translate(-1px,-1px);box-shadow:var(--shadow-brutal)}
+    .drawer-body{flex:1;overflow-y:auto;padding:var(--space-6)}
+    .drawer-section{margin-bottom:var(--space-8)}
+    .drawer-section-title{font-size:13px;font-weight:700;text-transform:uppercase;color:var(--medium-gray);letter-spacing:.05em;margin-bottom:var(--space-4);padding-bottom:var(--space-2);border-bottom:2px solid var(--light-gray)}
+    .drawer-item{display:flex;align-items:center;gap:var(--space-4);padding:var(--space-3) var(--space-3);border:var(--border-default);margin-bottom:var(--space-2);cursor:pointer;transition:transform var(--t),box-shadow var(--t);background:var(--white)}
+    .drawer-item:hover{transform:translate(-1px,-1px);box-shadow:var(--shadow-brutal)}
+    .drawer-item-icon{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:2px solid var(--dark-gray);flex-shrink:0}
+    .drawer-item-content{flex:1;min-width:0}
+    .drawer-item-label{font-size:14px;font-weight:600}
+    .drawer-item-desc{font-size:11px;color:var(--medium-gray);margin-top:2px}
+    .drawer-item-right{flex-shrink:0;font-size:12px;color:var(--medium-gray)}
+    .drawer-toggle-group{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-3);border:var(--border-default);margin-bottom:var(--space-2)}
+    .drawer-toggle-label{flex:1;font-size:14px;font-weight:600}
+    .drawer-toggle{width:40px;height:22px;border:2px solid var(--dark-gray);border-radius:var(--radius-full);background:var(--light-gray);cursor:pointer;position:relative;transition:background var(--t);flex-shrink:0}
+    .drawer-toggle.on{background:var(--blue)}
+    .drawer-toggle::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;background:var(--white);border-radius:50%;transition:transform var(--t)}
+    .drawer-toggle.on::after{transform:translateX(18px)}
+    .drawer-footer{padding:var(--space-4) var(--space-6);border-top:var(--border-default);font-size:11px;color:var(--medium-gray);text-align:center;flex-shrink:0}
+    /* 设置按钮 */
+    .settings-btn{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border:var(--border-default);background:var(--white);cursor:pointer;transition:transform var(--t)}
+    .settings-btn:hover{transform:translate(-1px,-1px);box-shadow:var(--shadow-brutal)}
+    .settings-btn:active{transform:translate(-2px,-2px);box-shadow:var(--shadow-brutal-active)}
+    /* ===== 拖拽投放区反馈 ===== */
+    .drop-zone.drag-over{background:var(--bg-hover);outline:2px dashed var(--blue);outline-offset:-2px}
+    /* ===== 日历选中日高亮 ===== */
+    .calendar-cell.selected{box-shadow:inset 0 0 0 2px var(--coral);background:var(--bg-hover)}
+    /* ===== Checkbox 对勾 ===== */
+    .task-checkbox{display:flex;align-items:center;justify-content:center}
+    .task-checkbox:checked{background:var(--dark-gray);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 13l4 4L19 7'/%3E%3C/svg%3E");background-size:12px;background-position:center;background-repeat:no-repeat}
+    /* ===== Webhook & 通知样式 ===== */
+    .drawer-webhook-form{margin-top:var(--space-3);padding-left:44px;width:100%}
+    .drawer-webhook-form .form-input{font-size:13px;padding:var(--space-2) var(--space-3);margin-bottom:var(--space-2)}
+    .webhook-event-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:var(--space-2) 0}
+    .webhook-event-item{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:4px 6px;border:1px solid var(--light-gray);cursor:pointer;transition:background var(--t)}
+    .webhook-event-item:hover{background:var(--bg-hover)}
+    .webhook-event-item.active{border-color:var(--dark-gray);background:var(--blue-dark);color:var(--white)}
+    .webhook-actions{display:flex;gap:var(--space-2);margin-top:var(--space-2)}
+    .webhook-actions .btn-small{flex:1;font-size:11px;padding:var(--space-1) var(--space-2)}
+    .drawer-action-pill{display:inline-flex;align-items:center;justify-content:center;height:32px;padding:0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border:var(--border-default);border-radius:var(--radius-full);cursor:pointer;flex:1;text-align:center;line-height:1}
+    .drawer-action-row{display:flex;gap:var(--space-2);width:100%;margin-top:var(--space-2);padding-left:44px}
+    .notif-btn{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border:var(--border-default);background:var(--white);cursor:pointer;transition:transform var(--t);position:relative}
+    .notif-btn:hover{transform:translate(-1px,-1px);box-shadow:var(--shadow-brutal)}
+    .notif-btn:active{transform:translate(-2px,-2px);box-shadow:var(--shadow-brutal-active)}
+    .notif-badge{position:absolute;top:-4px;right:-4px;width:18px;height:18px;background:var(--coral);border:2px solid var(--white);border-radius:50%;font-size:9px;font-weight:700;color:var(--white);display:flex;align-items:center;justify-content:center}
+    .notif-panel{position:absolute;top:100%;right:0;margin-top:4px;width:340px;background:var(--white);border:var(--border-default);box-shadow:var(--shadow-brutal);z-index:30;display:none}
+    .notif-panel.open{display:block}
+    .notif-panel-header{display:flex;align-items:center;justify-content:space-between;padding:var(--space-3) var(--space-4);border-bottom:var(--border-default)}
+    .notif-panel-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:var(--space-2)}
+    .notif-panel-clear{font-size:11px;font-weight:600;color:var(--coral);cursor:pointer;border:none;background:none;font-family:var(--font-sans)}
+    .notif-panel-clear:hover{text-decoration:underline}
+    .notif-item{display:flex;align-items:flex-start;gap:var(--space-3);padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--light-gray);transition:background var(--t)}
+    .notif-item:last-child{border-bottom:none}
+    .notif-item:hover{background:var(--bg-hover)}
+    .notif-item.unread{background:#FFF9E6}
+    :root.dark .notif-item.unread{background:var(--bg-today)}
+    .notif-item-icon{width:28px;height:28px;border:1.5px solid var(--dark-gray);border-radius:var(--radius-full);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .notif-item-icon .icon{width:14px;height:14px}
+    .notif-item-content{flex:1;min-width:0}
+    .notif-item-title{font-size:13px;font-weight:600;line-height:1.4}
+    .notif-item-time{font-size:11px;color:var(--medium-gray);margin-top:2px}
+    .notif-item-dismiss{font-size:16px;font-weight:700;color:var(--medium-gray);background:none;border:none;cursor:pointer;padding:0 2px;line-height:1}
+    .notif-item-dismiss:hover{color:var(--coral)}
+    .notif-empty{padding:var(--space-8);text-align:center;color:var(--medium-gray);font-size:13px}
+    /* ===== 新建任务弹窗表单 ===== */
+    .task-form{display:flex;flex-direction:column;gap:var(--space-5)}
+    .task-form-row{display:flex;gap:var(--space-4);flex-wrap:wrap}
+    .task-form-row > *{flex:1;min-width:180px}
+    .task-form label{display:block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:var(--space-2);color:var(--medium-gray)}
+    .task-form .form-input,.task-form textarea{width:100%}
+    .task-form textarea.form-input{min-height:100px;resize:vertical;font-size:14px;line-height:1.6}
+    .task-form .priority-group{display:flex;gap:var(--space-2);flex-wrap:wrap;padding-top:2px}
+    .task-form .priority-btn{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-3);border:var(--border-default);background:var(--white);cursor:pointer;transition:transform var(--t);font-family:var(--font-sans);font-size:13px;font-weight:600;color:var(--dark-gray)}
+    .task-form .priority-btn:hover{transform:translate(-1px,-1px);box-shadow:var(--shadow-brutal)}
+    .task-form .priority-btn.active{color:var(--white)}
+    .task-form .priority-btn .p-dot{width:12px;height:12px;border:2px solid var(--dark-gray);border-radius:var(--radius-full);flex-shrink:0}
+    .task-form .priority-btn.active .p-dot{border-color:transparent}
+    .task-form .priority-btn.coral.active{background:var(--coral-dark)}
+    .task-form .priority-btn.blue.active{background:var(--blue-dark)}
+    .task-form .priority-btn.yellow.active{background:var(--yellow);color:var(--dark-gray)}
+    .task-form .priority-btn.cyan.active{background:var(--cyan)}
+    .task-form .priority-btn .p-dot.coral{background:var(--coral)}
+    .task-form .priority-btn .p-dot.blue{background:var(--blue)}
+    .task-form .priority-btn .p-dot.yellow{background:var(--yellow)}
+    .task-form .priority-btn .p-dot.cyan{background:var(--cyan)}
+    .task-form .tag-select{display:flex;gap:var(--space-2);flex-wrap:wrap}
+    .task-form .tag-select .tag{cursor:pointer;transition:transform var(--t)}
+    .task-form .tag-select .tag:hover{transform:translate(-1px,-1px);box-shadow:var(--shadow-brutal)}
+    .task-form .tag-select .tag.active{background:var(--dark-gray);color:var(--white)}
+    .task-form-actions{display:flex;justify-content:flex-end;gap:var(--space-3);padding-top:var(--space-5);border-top:var(--border-default);margin-top:var(--space-2)}
+    .task-form-actions .btn{min-width:140px}
+    .task-time-range{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap}
+    .task-time-range .form-input{flex:1;min-width:140px;font-size:13px;font-family:var(--font-mono)}
+    .time-range-sep{font-size:12px;font-weight:700;color:var(--medium-gray);flex-shrink:0}
+    /* ===== 统计视图 ===== */
+    .stats-view .stats-summary-grid{margin-bottom:var(--space-6)}
+    .stats-view .stat-card{cursor:default}
+    .stats-charts{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-6)}
+    @media(max-width:900px){.stats-charts{grid-template-columns:1fr}}
+    .stats-chart-card{background:var(--white);border:var(--border-default);border-radius:var(--radius);padding:var(--space-6)}
+    .stats-chart-title{font-size:16px;font-weight:700;margin-bottom:var(--space-5);display:flex;align-items:center;gap:var(--space-2)}
+    .stats-chart-title .icon{width:18px;height:18px}
+    /* 柱状图 */
+    .bar-chart{display:flex;gap:var(--space-3);align-items:flex-end;height:160px;padding:0 var(--space-2)}
+    .bar-group{flex:1;display:flex;flex-direction:column;align-items:center;gap:var(--space-2);height:100%;justify-content:flex-end}
+    .bar{width:100%;max-width:48px;border:2px solid var(--dark-gray);transition:height .4s ease-out;position:relative;min-height:4px}
+    .bar.coral{background:var(--coral)}.bar.blue{background:var(--blue)}
+    .bar.yellow{background:var(--yellow)}.bar.cyan{background:var(--cyan)}
+    .bar-label{font-size:11px;font-weight:600;color:var(--medium-gray);text-align:center;text-transform:uppercase}
+    .bar-value{font-size:11px;font-weight:700;text-align:center;margin-top:2px}
+    /* 环形图 */
+    .donut-container{display:flex;align-items:center;justify-content:center;gap:var(--space-8);flex-wrap:wrap;padding:var(--space-4) 0}
+    .donut{width:140px;height:140px;border-radius:50%;border:2px solid var(--dark-gray);position:relative;overflow:hidden}
+    .donut-segment{position:absolute;inset:0;clip-path:polygon(50% 50%,50% 0,100% 0,100% 100%,0 100%,0 0,50% 0)}
+    .donut-hole{position:absolute;inset:12px;border-radius:50%;background:var(--white);display:flex;align-items:center;justify-content:center;flex-direction:column}
+    .donut-hole .dv{font-size:22px;font-weight:700;line-height:1;color:var(--dark-gray)}
+    .donut-hole .dl{font-size:10px;color:var(--medium-gray);margin-top:2px}
+    .donut-legend{display:flex;flex-direction:column;gap:var(--space-2)}
+    .donut-legend-item{display:flex;align-items:center;gap:var(--space-2);font-size:13px;font-weight:600}
+    .donut-legend-item .dl-dot{width:12px;height:12px;border:2px solid var(--dark-gray);border-radius:var(--radius-full);flex-shrink:0}
+    .donut-legend-item .dl-dot.done{background:var(--cyan)}.donut-legend-item .dl-dot.pending{background:var(--yellow)}
+    .donut-legend-item .dl-dot.overdue{background:var(--coral)}.donut-legend-item .dl-dot.progress{background:var(--blue)}
+    .donut-legend-item .dl-label{flex:1}.donut-legend-item .dl-count{font-weight:700}
+    /* ===== 辅助技术工具类 ===== */
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    /* ===== 移动端日历适配 ===== */
+    @media(max-width:640px){.calendar-cell{min-height:60px;padding:var(--space-1)}.calendar-cell .calendar-day-number{font-size:12px;margin-bottom:0}.cal-task{font-size:9px;padding:1px 2px}}
+    /* ===== Toast 消息提示 ===== */
+    .toast-container{position:fixed;bottom:var(--space-16);left:50%;transform:translateX(-50%);z-index:100;display:flex;flex-direction:column;gap:var(--space-3);pointer-events:none}
+    .toast{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-6);background:var(--dark-gray);color:var(--white);font-size:14px;font-weight:600;border:2px solid var(--dark-gray);opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s;pointer-events:auto;white-space:nowrap}
+    .toast.show{opacity:1;transform:translateY(0)}
+    .toast.success{background:var(--cyan);color:var(--dark-gray);border-color:var(--cyan)}
+    .toast.error{background:var(--coral-dark);color:var(--white)}
+    .toast.warning{background:var(--yellow);color:var(--dark-gray)}
+    .toast .icon{width:16px;height:16px}
+    /* ===== 视图面板切换动画 ===== */
+    .view-panel{animation:panelIn .2s ease-out}
+    @keyframes panelIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    /* ===== Header 响应式 ===== */
+    @media(max-width:900px){
+      .header-left .tab-bar .tab-btn{padding:8px 12px;font-size:12px}
+      .header-left .tab-bar .tab-btn .icon{width:14px;height:14px}
+    }
+    @media(max-width:720px){
+      .app-header .header-row{flex-direction:column;align-items:stretch}
+      .header-left{flex-direction:column;align-items:stretch;gap:var(--space-3)}
+      .header-left .tab-bar{overflow-x:auto;-webkit-overflow-scrolling:touch}
+      .header-left .tab-bar .tab-btn{flex-shrink:0}
+    }
+    /* ===== 响应式统计卡片 ===== */
+    @media(max-width:640px){.stats-summary-grid{grid-template-columns:repeat(2,1fr)}}
+    /* ===== 暗黑模式组件覆盖 ===== */
+    :root.dark .app-header,
+    :root.dark .quadrant-card,
+    :root.dark .card,
+    :root.dark .task-item,
+    :root.dark .year-month-card,
+    :root.dark .cal-sidebar-card,
+    :root.dark .dropdown-menu,
+    :root.dark .drawer,
+    :root.dark .stat-card,
+    :root.dark .modal-content,
+    :root.dark .network-badge{background:var(--bg-card)}
+    :root.dark .stat-card{background:var(--bg-card)}
+    :root.dark .calendar-grid,
+    :root.dark .week-grid,
+    :root.dark .day-timeline{background:#3a3a42}
+    :root.dark .calendar-cell,
+    :root.dark .calendar-weekday,
+    :root.dark .week-time-cell,
+    :root.dark .week-day-header,
+    :root.dark .week-day-col,
+    :root.dark .day-hour-label,
+    :root.dark .day-hour-cell{background:var(--bg-card)}
+    :root.dark .calendar-cell:hover{background:var(--bg-hover)}
+    :root.dark .btn,
+    :root.dark .dropdown-toggle,
+    :root.dark .dropdown-item,
+    :root.dark .drawer-item,
+    :root.dark .drawer-toggle-group,
+    :root.dark .settings-btn,
+    :root.dark .calendar-nav-btn,
+    :root.dark .calendar-today-btn,
+    :root.dark .drawer-close{background:var(--bg-card);color:var(--text-primary)}
+    :root.dark .dropdown-item:hover{background:var(--bg-dropdown-hover);color:var(--dark-gray)}
+    :root.dark .notif-panel{background:var(--bg-card)}
+    :root.dark .notif-btn{background:var(--bg-card)}
+    :root.dark .form-input{background:var(--bg-input);color:var(--text-primary)}
+    :root.dark .network-badge{color:var(--text-primary)}
+    :root.dark .day-task-block{background:var(--bg-card);color:var(--text-primary)}
+    :root.dark .week-task{color:var(--text-primary)}
+    :root.dark .tag{color:var(--text-primary)}
+    :root.dark .modal-overlay{background:rgba(0,0,0,.7)}
+    :root.dark .drawer-overlay{background:rgba(0,0,0,.7)}
+    :root.dark .quadrant-add-btn,
+    :root.dark .tab-btn.active{color:var(--dark-gray)}
+    :root.dark .tab-btn:not(.active){background:var(--bg-card);color:var(--text-primary)}
+    :root.dark .btn-warning{color:#1b1b1e}
+    :root.dark .quadrant-add-btn.coral,
+    :root.dark .quadrant-add-btn.blue{color:var(--white)}
+    :root.dark .stat-value.dark{color:var(--text-primary)}
+    :root.dark .modal-header{background:var(--bg-card)}
+    :root.dark .divider{border-top-color:var(--light-gray)}
+    :root.dark .tag{background:var(--bg-card)}
+    :root.dark .btn-warning{color:#1b1b1e}
+    :root.dark .toast{background:var(--bg-card);color:var(--text-primary);border-color:var(--light-gray)}
+    :root.dark .toast.success{background:var(--cyan);color:#1b1b1e}
+    :root.dark .toast.warning{background:var(--yellow);color:#1b1b1e}
+  </style>
+</head>
+<body>
+  <!-- ===== 左侧设置抽屉 ===== -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()" role="presentation"></div>
+  <div class="drawer" id="settingsDrawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+    <div class="drawer-header">
+      <div class="drawer-header-title" id="drawerTitle">
+        <svg aria-hidden="true" focusable="false" class="icon icon-24" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        设置
+      </div>
+      <button class="drawer-close" onclick="closeDrawer()">
+        <svg aria-hidden="true" focusable="false" class="icon icon-18" viewBox="0 0 24 24" fill="none">
+          <path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="drawer-body">
+      <!-- 外观设置 -->
+      <div class="drawer-section">
+        <div class="drawer-section-title">外观</div>
+        <div class="drawer-toggle-group">
+          <span class="drawer-toggle-label">深色模式</span>
+          <button class="drawer-toggle" id="darkModeToggle" role="switch" aria-checked="false" onclick="toggleDarkMode(this)"><span class="sr-only">深色模式</span></button>
+        </div>
+        <div class="drawer-toggle-group">
+          <span class="drawer-toggle-label">紧凑布局</span>
+          <button class="drawer-toggle" role="switch" aria-checked="false" onclick="this.classList.toggle('on'); this.setAttribute('aria-checked', this.classList.contains('on'))"><span class="sr-only">切换</span></button>
+        </div>
+      </div>
+
+      <!-- 集成 -->
+      <div class="drawer-section">
+        <div class="drawer-section-title">集成</div>
+        <div class="drawer-item" style="cursor:default;flex-wrap:wrap">
+          <div class="drawer-item-icon">
+            <svg aria-hidden="true" focusable="false" class="icon icon-18" viewBox="0 0 24 24" fill="none">
+              <path d="M6 4h10l4 4v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M16 4v4h4" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="drawer-item-content">
+            <div class="drawer-item-label">Excel 导入/导出</div>
+            <div class="drawer-item-desc">导入任务、导出备份、下载模板</div>
+          </div>
+          <div class="drawer-action-row">
+            <button class="drawer-action-pill" style="background:var(--blue);color:var(--dark-gray)">导入</button>
+            <button class="drawer-action-pill" style="background:var(--cyan);color:var(--dark-gray)">导出</button>
+            <button class="drawer-action-pill" style="background:var(--white)">模板</button>
+          </div>
+        </div>
+        <div class="drawer-item" style="cursor:default;flex-wrap:wrap">
+          <div class="drawer-item-icon">
+            <svg aria-hidden="true" focusable="false" class="icon icon-18" viewBox="0 0 24 24" fill="none">
+              <rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="2"/>
+              <path d="M9 8v8M12 8v8M15 8v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M8 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="drawer-item-content">
+            <div class="drawer-item-label">AI 接口</div>
+            <div class="drawer-item-desc">读写模式 · 只读模式 · 关闭</div>
+          </div>
+          <div class="drawer-action-row">
+            <button class="drawer-action-pill" style="background:var(--blue);color:var(--dark-gray)">读写</button>
+            <button class="drawer-action-pill" style="background:var(--white)">只读</button>
+            <button class="drawer-action-pill" style="background:var(--coral-dark);color:var(--white);border-color:var(--coral-dark)">关闭</button>
+          </div>
+        </div>
+
+        <!-- Webhook 配置 -->
+        <div class="drawer-item" style="cursor:default;flex-wrap:wrap">
+          <div class="drawer-item-icon">
+            <svg aria-hidden="true" focusable="false" class="icon icon-18" viewBox="0 0 24 24" fill="none">
+              <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 0 1 9-9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="drawer-item-content">
+            <div class="drawer-item-label">Webhook 到期通知</div>
+            <div class="drawer-item-desc">任务截止时自动推送通知到外部服务</div>
+          </div>
+          <div class="drawer-webhook-form">
+            <label for="webhook-url" class="sr-only">Webhook URL</label>
+            <input class="form-input" id="webhook-url" placeholder="https://hooks.example.com/notify" value="https://hooks.example.com/duckly-hook">
+            <div class="webhook-event-grid">
+              <div class="webhook-event-item active"><span class="wh-dot" style="background:var(--coral)"></span>到期提醒</div>
+              <div class="webhook-event-item active"><span class="wh-dot" style="background:var(--blue)"></span>任务完成</div>
+              <div class="webhook-event-item"><span class="wh-dot" style="background:var(--yellow)"></span>任务创建</div>
+              <div class="webhook-event-item active"><span class="wh-dot" style="background:var(--cyan)"></span>截止变更</div>
+            </div>
+            <div class="webhook-actions">
+              <button class="btn btn-small btn-primary" onclick="showToast('Webhook 配置已保存', 'success')">保存</button>
+              <button class="btn btn-small" onclick="showToast('测试通知已发送 ✓', 'success')">测试</button>
+              <button class="btn btn-small btn-danger" onclick="showToast('Webhook 已删除', 'warning')">删除</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="drawer-item">
+          <div class="drawer-item-icon">
+            <svg aria-hidden="true" focusable="false" class="icon icon-18" viewBox="0 0 24 24" fill="none">
+              <path d="M9 12h6M12 9v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="drawer-item-content">
+            <div class="drawer-item-label">查看调用日志</div>
+            <div class="drawer-item-desc">AI 接口的请求与响应记录</div>
+          </div>
+          <div class="drawer-item-right">→</div>
+        </div>
+        <div class="drawer-item">
+          <div class="drawer-item-icon">
+            <svg aria-hidden="true" focusable="false" class="icon icon-18" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 8v4M12 16h0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="drawer-item-content">
+            <div class="drawer-item-label">接口协议文档</div>
+            <div class="drawer-item-desc">查看 API 文档和接入说明</div>
+          </div>
+          <div class="drawer-item-right">→</div>
+        </div>
+      </div>
+
+      <!-- 数据管理 -->
+      <div class="drawer-section">
+        <div class="drawer-section-title">数据管理</div>
+        <div class="drawer-item">
+          <div class="drawer-item-icon">
+            <svg aria-hidden="true" focusable="false" class="icon icon-18" viewBox="0 0 24 24" fill="none">
+              <path d="M6 4h10l4 4v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M16 4v4h4" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="drawer-item-content">
+            <div class="drawer-item-label">导入数据</div>
+            <div class="drawer-item-desc">从 CSV / Excel 导入任务</div>
+          </div>
+          <div class="drawer-item-right">→</div>
+        </div>
+        <div class="drawer-item">
+          <div class="drawer-item-icon">
+            <svg aria-hidden="true" focusable="false" class="icon icon-18" viewBox="0 0 24 24" fill="none">
+              <path d="M6 4h10l4 4v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M16 4v4h4" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M12 10v6M9 13h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="drawer-item-content">
+            <div class="drawer-item-label">导出全部</div>
+            <div class="drawer-item-desc">备份所有任务数据到本地</div>
+          </div>
+          <div class="drawer-item-right">→</div>
+        </div>
+        <div class="drawer-item">
+          <div class="drawer-item-icon" style="border-color:var(--coral)">
+            <svg aria-hidden="true" focusable="false" class="icon icon-18" viewBox="0 0 24 24" fill="none">
+              <path d="M5 7h14M10 7V4h4v3M6 7v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="drawer-item-content">
+            <div class="drawer-item-label">清除所有数据</div>
+            <div class="drawer-item-desc">删除全部任务和标签（不可撤销）</div>
+          </div>
+          <div class="drawer-item-right" style="color:var(--coral)">⚠</div>
+        </div>
+      </div>
+
+      <!-- 通知 -->
+      <div class="drawer-section">
+        <div class="drawer-section-title">通知</div>
+        <div class="drawer-toggle-group">
+          <span class="drawer-toggle-label">任务提醒</span>
+          <div class="drawer-toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="drawer-toggle-group">
+          <span class="drawer-toggle-label">截止日期推送</span>
+          <div class="drawer-toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="drawer-toggle-group">
+          <span class="drawer-toggle-label">声音提示</span>
+          <button class="drawer-toggle" role="switch" aria-checked="false" onclick="this.classList.toggle('on'); this.setAttribute('aria-checked', this.classList.contains('on'))"><span class="sr-only">切换</span></button>
+        </div>
+        <div class="drawer-toggle-group">
+          <span class="drawer-toggle-label">Webhook 推送</span>
+          <div class="drawer-toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="drawer-toggle-group">
+          <span class="drawer-toggle-label">到期前 24h 预提醒</span>
+          <div class="drawer-toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+
+      <!-- 关于 -->
+      <div class="drawer-section">
+        <div class="drawer-section-title">关于</div>
+        <div class="drawer-item">
+          <div class="drawer-item-icon">
+            <svg aria-hidden="true" focusable="false" class="icon icon-18" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 8v4M12 16h0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="drawer-item-content">
+            <div class="drawer-item-label">使用帮助</div>
+            <div class="drawer-item-desc">查看文档和快捷键</div>
+          </div>
+          <div class="drawer-item-right">→</div>
+        </div>
+        <div class="drawer-item">
+          <div class="drawer-item-icon">
+            <svg aria-hidden="true" focusable="false" class="icon icon-18" viewBox="0 0 24 24" fill="none">
+              <path d="M18 10h-1.26A8 8 0 1 0 9 20h0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M18 13l-4 4h3v4h2v-4h3l-4-4z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="drawer-item-content">
+            <div class="drawer-item-label">检查更新</div>
+            <div class="drawer-item-desc">v1.0.0 — 已是最新版本</div>
+          </div>
+          <div class="drawer-item-right">✓</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer-footer">
+      Duckly v1.0.0 · 所有数据本地 OPFS 存储 · 离线可用
+    </div>
+  </div>
+
+  <!-- Toast 消息提示 -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- 全局网络状态提示(PWA离线能力) -->
+  <div class="network-badge">
+    <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="#4DD4D0"/>
+      <path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    在线
+  </div>
+
+  <!-- 顶部全局导航Header -->
+  <header class="app-header">
+    <div class="header-row">
+      <!-- Logo -->
+      <div class="header-left">
+        <div class="logo-group">
+          <img src="logo.svg" alt="Duckly" class="logo-icon">
+          <h1 class="app-title">Duckly</h1>
+        </div>
+        <!-- 视图切换Tab：四象限/日历/列表 -->
+        <div class="tab-bar" style="margin:0" role="tablist">
+          <button class="tab-btn active" data-view="calendar" role="tab" aria-selected="true">
+            <svg aria-hidden="true" focusable="false" class="icon icon-18" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+              <path d="M3 10h18" stroke="currentColor" stroke-width="2"/>
+              <path d="M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <rect x="7" y="13" width="2" height="2" rx=".3" fill="currentColor"/>
+              <rect x="11" y="13" width="2" height="2" rx=".3" fill="currentColor"/>
+              <rect x="15" y="13" width="2" height="2" rx=".3" fill="currentColor"/>
+            </svg>
+            日历视图
+          </button>
+          <button class="tab-btn" data-view="quadrant" role="tab" aria-selected="false">
+            <svg aria-hidden="true" focusable="false" class="icon icon-18" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" stroke-width="2"/>
+              <rect x="13" y="3" width="8" height="8" rx="1" stroke="currentColor" stroke-width="2"/>
+              <rect x="3" y="13" width="8" height="8" rx="1" stroke="currentColor" stroke-width="2"/>
+              <rect x="13" y="13" width="8" height="8" rx="1" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            四象限视图
+          </button>
+          <button class="tab-btn" data-view="list" role="tab" aria-selected="false">
+            <svg aria-hidden="true" focusable="false" class="icon icon-18" viewBox="0 0 24 24" fill="none">
+              <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="4" cy="6" r="1.5" fill="currentColor"/>
+              <circle cx="4" cy="12" r="1.5" fill="currentColor"/>
+              <circle cx="4" cy="18" r="1.5" fill="currentColor"/>
+            </svg>
+            任务列表
+          </button>
+          <button class="tab-btn" data-view="stats" role="tab" aria-selected="false">
+            <svg aria-hidden="true" focusable="false" class="icon icon-18" viewBox="0 0 24 24" fill="none">
+              <rect x="4" y="12" width="4" height="8" rx="1" fill="currentColor" opacity=".7"/>
+              <rect x="10" y="8" width="4" height="12" rx="1" fill="currentColor" opacity=".7"/>
+              <rect x="16" y="4" width="4" height="16" rx="1" fill="currentColor" opacity=".7"/>
+            </svg>
+            统计
+          </button>
+        </div>
+      </div>
+
+      <!-- 右侧工具栏 -->
+      <div class="header-right">
+        <button class="btn btn-primary btn-small" onclick="openNewTaskModal()">
+          <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+            <path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          新建任务
+        </button>
+
+        <!-- 双语切换 -->
+        <div style="position:relative;">
+          <button class="dropdown-toggle" data-toggle="dropdown">
+            <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18z" stroke="currentColor" stroke-width="2"/>
+              <path d="M4 12h16" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            中文
+            <svg aria-hidden="true" focusable="false" class="icon icon-12" viewBox="0 0 24 24" fill="none" style="width:12px;height:12px">
+              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div class="dropdown-menu">
+            <button class="dropdown-item active">简体中文</button>
+            <button class="dropdown-item">English</button>
+          </div>
+        </div>
+
+        <!-- 通知铃铛 -->
+        <div style="position:relative;">
+          <button class="notif-btn" onclick="toggleNotifPanel()">
+            <svg aria-hidden="true" focusable="false" class="icon icon-18" viewBox="0 0 24 24" fill="none">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span class="notif-badge">3</span>
+          </button>
+          <!-- 通知面板 -->
+          <div class="notif-panel" id="notifPanel">
+            <div class="notif-panel-header">
+              <span class="notif-panel-title">
+                <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                通知 · 3 条未读
+              </span>
+              <button class="notif-panel-clear" onclick="showToast('已标记所有通知为已读', 'success')">全部标为已读</button>
+            </div>
+            <div class="notif-item unread">
+              <div class="notif-item-icon coral">
+                <svg aria-hidden="true" focusable="false" class="icon" viewBox="0 0 24 24" fill="none" style="width:14px;height:14px">
+                  <circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="2"/>
+                  <path d="M12 8v4M12 16h0" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="notif-item-content">
+                <div class="notif-item-title">「修复线上生产致命Bug」今天 18:00 截止</div>
+                <div class="notif-item-time">2 分钟前 · 紧急</div>
+              </div>
+              <button class="notif-item-dismiss" onclick="this.closest('.notif-item').remove(); updateNotifBadge()">&times;</button>
+            </div>
+            <div class="notif-item unread">
+              <div class="notif-item-icon coral">
+                <svg aria-hidden="true" focusable="false" class="icon" viewBox="0 0 24 24" fill="none" style="width:14px;height:14px">
+                  <path d="M9 11l3 3L22 4" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="notif-item-content">
+                <div class="notif-item-title">「Q2项目复盘报告」已到期</div>
+                <div class="notif-item-time">1 小时前 · 逾期 2 天</div>
+              </div>
+              <button class="notif-item-dismiss" onclick="this.closest('.notif-item').remove(); updateNotifBadge()">&times;</button>
+            </div>
+            <div class="notif-item unread">
+              <div class="notif-item-icon" style="background:var(--blue);border-color:var(--blue)">
+                <svg aria-hidden="true" focusable="false" class="icon" viewBox="0 0 24 24" fill="none" style="width:14px;height:14px">
+                  <path d="M5 13l4 4L19 7" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="notif-item-content">
+                <div class="notif-item-title">「客户紧急需求评审会议」已完成</div>
+                <div class="notif-item-time">3 小时前</div>
+              </div>
+              <button class="notif-item-dismiss" onclick="this.closest('.notif-item').remove(); updateNotifBadge()">&times;</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 设置按钮（最右侧） -->
+        <button class="settings-btn" onclick="openDrawer()" title="设置">
+          <svg aria-hidden="true" focusable="false" class="icon icon-20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主页面容器 -->
+  <main class="page-wrap">
+    <!-- ==================== 统计视图 ==================== -->
+    <section class="view-panel stats-view" id="view-stats" style="display:none">
+      <section class="stats-summary-grid">
+        <div class="stat-card">
+          <div class="stat-value dark">12</div>
+          <div class="stat-label">全部任务</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value cyan">3</div>
+          <div class="stat-label">已完成</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value yellow">9</div>
+          <div class="stat-label">待处理</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value blue">25%</div>
+          <div class="stat-label">完成率</div>
+        </div>
+      </section>
+
+      <!-- 图表区域 -->
+      <div class="stats-charts">
+        <!-- 柱状图：四象限分布 -->
+        <div class="stats-chart-card">
+          <div class="stats-chart-title">
+            <svg aria-hidden="true" focusable="false" class="icon icon-18" viewBox="0 0 24 24" fill="none">
+              <rect x="4" y="12" width="4" height="8" rx="1" fill="currentColor" opacity=".7"/>
+              <rect x="10" y="8" width="4" height="12" rx="1" fill="currentColor" opacity=".7"/>
+              <rect x="16" y="4" width="4" height="16" rx="1" fill="currentColor" opacity=".7"/>
+            </svg>
+            四象限任务分布
+          </div>
+          <div class="bar-chart">
+            <div class="bar-group"><div class="bar coral" style="height:120px"></div><div class="bar-value">2</div><div class="bar-label">立即做</div></div>
+            <div class="bar-group"><div class="bar blue" style="height:88px"></div><div class="bar-value">1</div><div class="bar-label">计划做</div></div>
+            <div class="bar-group"><div class="bar yellow" style="height:64px"></div><div class="bar-value">1</div><div class="bar-label">委托做</div></div>
+            <div class="bar-group"><div class="bar cyan" style="height:32px"></div><div class="bar-value">0</div><div class="bar-label">消除</div></div>
+          </div>
+        </div>
+
+        <!-- 环形图：完成状态 -->
+        <div class="stats-chart-card">
+          <div class="stats-chart-title">
+            <svg aria-hidden="true" focusable="false" class="icon icon-18" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 3v9l6.364 6.364" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M5 12h7" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            任务完成状态
+          </div>
+          <div class="donut-container">
+            <div class="donut">
+              <div class="donut-segment" style="background:var(--cyan);clip-path:polygon(50% 50%,50% 0,100% 0,100% 100%,0 100%,0 0,50% 0);opacity:.25"></div>
+              <div class="donut-hole">
+                <span class="dv">25%</span>
+                <span class="dl">完成率</span>
+              </div>
+            </div>
+            <div class="donut-legend">
+              <div class="donut-legend-item"><span class="dl-dot done"></span><span class="dl-label">已完成</span><span class="dl-count">3</span></div>
+              <div class="donut-legend-item"><span class="dl-dot progress"></span><span class="dl-label">进行中</span><span class="dl-count">5</span></div>
+              <div class="donut-legend-item"><span class="dl-dot pending"></span><span class="dl-label">待处理</span><span class="dl-count">3</span></div>
+              <div class="donut-legend-item"><span class="dl-dot overdue"></span><span class="dl-label">已逾期</span><span class="dl-count">1</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 四象限视图视图 ==================== -->
+    <section class="view-panel" id="view-quadrant" style="display:none">
+      <div class="quadrant-grid">
+        <!-- Q1 立即做：紧急重要 Coral -->
+        <div class="quadrant-card">
+          <div class="quadrant-header">
+            <div class="quadrant-title-row">
+              <span class="quadrant-dot coral"></span>
+              <div>
+                <h3 class="quadrant-title">DO FIRST 立即做</h3>
+                <p class="quadrant-subtitle">紧急 & 重要</p>
+              </div>
+            </div>
+            <button class="quadrant-add-btn coral">+ Add</button>
+          </div>
+          <div class="drop-zone">
+            <div class="task-item">
+              <input type="checkbox" class="task-checkbox">
+              <p class="task-text">修复线上生产致命Bug，今日18点前上线</p>
+              <div class="task-actions">
+                <button class="task-btn-edit">
+                  <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+                    <path d="M15.232 5.232l3.536 3.536M9 11l7.5-7.5a2 2 0 0 1 2.828 0l1.172 1.172a2 2 0 0 1 0 2.828L11 17H7v-4l8.5-8.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <button class="task-btn-delete">
+                  <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+                    <path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="task-item">
+              <input type="checkbox" class="task-checkbox" checked>
+              <p class="task-text completed">客户紧急需求评审会议</p>
+              <div class="task-actions">
+                <button class="task-btn-edit">
+                  <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+                    <path d="M15.232 5.232l3.536 3.536M9 11l7.5-7.5a2 2 0 0 1 2.828 0l1.172 1.172a2 2 0 0 1 0 2.828L11 17H7v-4l8.5-8.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <button class="task-btn-delete">
+                  <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+                    <path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Q2 计划做：重要不紧急 Blue -->
+        <div class="quadrant-card">
+          <div class="quadrant-header">
+            <div class="quadrant-title-row">
+              <span class="quadrant-dot blue"></span>
+              <div>
+                <h3 class="quadrant-title">SCHEDULE 计划做</h3>
+                <p class="quadrant-subtitle">重要 & 不紧急</p>
+              </div>
+            </div>
+            <button class="quadrant-add-btn blue">+ Add</button>
+          </div>
+          <div class="drop-zone">
+            <div class="task-item">
+              <input type="checkbox" class="task-checkbox">
+              <p class="task-text">学习React19 + SQLite-Wasm本地数据库</p>
+              <div class="tag-group" style="margin-top:4px">
+                <span class="tag tag-pill" style="background:var(--blue)">技术</span>
+                <span class="tag tag-pill" style="background:var(--yellow)">长期</span>
+              </div>
+              <div class="task-actions">
+                <button class="task-btn-edit">
+                  <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+                    <path d="M15.232 5.232l3.536 3.536M9 11l7.5-7.5a2 2 0 0 1 2.828 0l1.172 1.172a2 2 0 0 1 0 2.828L11 17H7v-4l8.5-8.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <button class="task-btn-delete">
+                  <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+                    <path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Q3 委托做：紧急不重要 Yellow -->
+        <div class="quadrant-card">
+          <div class="quadrant-header">
+            <div class="quadrant-title-row">
+              <span class="quadrant-dot yellow"></span>
+              <div>
+                <h3 class="quadrant-title">DELEGATE 委托做</h3>
+                <p class="quadrant-subtitle">紧急 & 不重要</p>
+              </div>
+            </div>
+            <button class="quadrant-add-btn yellow">+ Add</button>
+          </div>
+          <div class="drop-zone">
+            <div class="task-item">
+              <input type="checkbox" class="task-checkbox">
+              <p class="task-text">整理会议纪要，同步给团队成员</p>
+              <div class="task-actions">
+                <button class="task-btn-edit">
+                  <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+                    <path d="M15.232 5.232l3.536 3.536M9 11l7.5-7.5a2 2 0 0 1 2.828 0l1.172 1.172a2 2 0 0 1 0 2.828L11 17H7v-4l8.5-8.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <button class="task-btn-delete">
+                  <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+                    <path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="empty-tip">拖拽任务到此处可归类</div>
+          </div>
+        </div>
+
+        <!-- Q4 消除：不紧急不重要 Cyan -->
+        <div class="quadrant-card">
+          <div class="quadrant-header">
+            <div class="quadrant-title-row">
+              <span class="quadrant-dot cyan"></span>
+              <div>
+                <h3 class="quadrant-title">ELIMINATE 消除</h3>
+                <p class="quadrant-subtitle">不紧急 & 不重要</p>
+              </div>
+            </div>
+            <button class="quadrant-add-btn cyan">+ Add</button>
+          </div>
+          <div class="drop-zone">
+            <div class="empty-tip">无低价值任务，保持专注</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 日历视图（默认激活） ==================== -->
+    <section class="view-panel" id="view-calendar" style="display:block">
+      <div class="calendar-section active">
+        <!-- 日历导航 -->
+        <div class="calendar-header">
+          <div class="calendar-nav">
+            <button class="calendar-nav-btn" onclick="navigateMonth(-1)">
+              <svg aria-hidden="true" focusable="false" class="icon icon-20" viewBox="0 0 24 24" fill="none">
+                <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <span class="calendar-month-year" id="calendarMonthYear">2026年 7月</span>
+            <button class="calendar-nav-btn" onclick="navigateMonth(1)">
+              <svg aria-hidden="true" focusable="false" class="icon icon-20" viewBox="0 0 24 24" fill="none">
+                <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button class="calendar-today-btn" onclick="goToToday()">
+              <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+                <rect x="10" y="6" width="4" height="12" rx="1" fill="currentColor" opacity=".6"/>
+                <rect x="6" y="10" width="12" height="4" rx="1" fill="currentColor" opacity=".6"/>
+              </svg>
+              今天
+            </button>
+          </div>
+          <!-- 日历视图模式切换 -->
+          <div class="tab-bar" style="margin:0" id="calendarModeTabs">
+            <button class="tab-btn active" data-mode="month">
+              <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+                <path d="M3 10h18" stroke="currentColor" stroke-width="2"/>
+                <path d="M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              月视图
+            </button>
+            <button class="tab-btn" data-mode="week">
+              <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+                <path d="M3 10h18" stroke="currentColor" stroke-width="2"/>
+                <path d="M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M3 16h18" stroke="currentColor" stroke-width="1" stroke-dasharray="2 2"/>
+              </svg>
+              周视图
+            </button>
+            <button class="tab-btn" data-mode="day">
+              <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+                <path d="M3 10h18" stroke="currentColor" stroke-width="2"/>
+                <path d="M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M12 10v6M8 13h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              日视图
+            </button>
+            <button class="tab-btn" data-mode="year">
+              <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+                <path d="M3 9h18" stroke="currentColor" stroke-width="2"/>
+                <path d="M9 3v18M15 3v18" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M6 13h3M15 13h3M6 17h3M15 17h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              年视图
+            </button>
+          </div>
+        </div>
+
+        <!-- 日历布局：日网格 + 侧边详情 -->
+        <div class="calendar-layout">
+          <!-- 左侧：月历网格 -->
+          <div>
+            <div class="calendar-grid" id="calendarGrid">
+              <!-- 星期行 -->
+              <div class="calendar-weekday">日</div>
+              <div class="calendar-weekday">一</div>
+              <div class="calendar-weekday">二</div>
+              <div class="calendar-weekday">三</div>
+              <div class="calendar-weekday">四</div>
+              <div class="calendar-weekday">五</div>
+              <div class="calendar-weekday weekend">六</div>
+              <!-- 日单元格由JS动态渲染 -->
+            </div>
+          </div>
+
+          <!-- 右侧：选中日期详情 -->
+          <div class="calendar-sidebar">
+            <!-- 选中日期信息 -->
+            <div class="cal-sidebar-card" id="selectedDateInfo">
+              <div class="cal-sidebar-title">
+                <svg aria-hidden="true" focusable="false" class="icon icon-18" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+                  <path d="M3 10h18" stroke="currentColor" stroke-width="2"/>
+                  <path d="M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <span id="selectedDateTitle">2026年7月28日 星期二</span>
+              </div>
+              <div style="display:flex;gap:var(--space-2);margin-top:var(--space-3)">
+                <span class="cal-sidebar-task-tag" style="background:var(--blue)">3个任务</span>
+                <span class="cal-sidebar-task-tag" style="background:var(--yellow)">1个截止</span>
+              </div>
+            </div>
+
+            <!-- 任务列表 -->
+            <div class="cal-sidebar-card">
+              <div class="cal-sidebar-title">
+                <svg aria-hidden="true" focusable="false" class="icon icon-18" viewBox="0 0 24 24" fill="none">
+                  <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                任务安排
+              </div>
+
+              <div class="cal-sidebar-task-item">
+                <span class="cal-sidebar-time">10:00</span>
+                <div class="cal-sidebar-task-info">
+                  <div class="cal-sidebar-task-title">修复线上生产致命Bug</div>
+                  <span class="cal-sidebar-task-tag" style="background:var(--coral-dark);color:var(--white);border-color:var(--coral)">紧急</span>
+                </div>
+              </div>
+
+              <div class="cal-sidebar-task-item">
+                <span class="cal-sidebar-time">14:00</span>
+                <div class="cal-sidebar-task-info">
+                  <div class="cal-sidebar-task-title">客户紧急需求评审会议</div>
+                  <span class="cal-sidebar-task-tag" style="background:var(--yellow)">会议</span>
+                </div>
+              </div>
+
+              <div class="cal-sidebar-task-item">
+                <span class="cal-sidebar-time">16:30</span>
+                <div class="cal-sidebar-task-info">
+                  <div class="cal-sidebar-task-title">整理团队周报</div>
+                  <span class="cal-sidebar-task-tag" style="background:var(--blue)">日常</span>
+                </div>
+              </div>
+
+              <div class="cal-sidebar-task-item" style="opacity:.6">
+                <span class="cal-sidebar-time">09:00</span>
+                <div class="cal-sidebar-task-info">
+                  <div class="cal-sidebar-task-title" style="text-decoration:line-through">每日站会</div>
+                  <span class="cal-sidebar-task-tag" style="background:var(--cyan)">已完成</span>
+                </div>
+              </div>
+
+              <button class="btn btn-small" style="width:100%;margin-top:var(--space-3);justify-content:center">
+                <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                添加任务
+              </button>
+            </div>
+
+            <!-- 快捷筛选 -->
+            <div class="cal-sidebar-card">
+              <div class="cal-sidebar-title">
+                <svg aria-hidden="true" focusable="false" class="icon icon-18" viewBox="0 0 24 24" fill="none">
+                  <path d="M4 7h16M7 12h10M10 17h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                快捷筛选
+              </div>
+              <div class="tag-group">
+                <span class="tag tag-pill" style="background:var(--coral-dark);color:var(--white);border-color:var(--coral);cursor:pointer">紧急</span>
+                <span class="tag tag-pill" style="background:var(--blue);cursor:pointer">重要</span>
+                <span class="tag tag-pill" style="background:var(--yellow);cursor:pointer">进行中</span>
+                <span class="tag tag-pill" style="background:var(--cyan);cursor:pointer">已完成</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 年视图容器 ===== -->
+        <div class="year-view" id="yearView" style="display:none">
+          <div class="year-grid" id="yearGrid"></div>
+        </div>
+
+        <!-- ===== 周视图容器 ===== -->
+        <div class="week-view" id="weekView">
+          <div class="week-multi-events" id="weekMultiEvents"></div>
+          <div class="week-grid" id="weekGrid">
+            <!-- 由JS动态渲染 -->
+          </div>
+        </div>
+
+        <!-- ===== 日视图容器 ===== -->
+        <div class="day-view" id="dayView">
+          <div class="day-multi-events" id="dayMultiEvents"></div>
+          <div class="day-timeline" id="dayTimeline">
+            <!-- 由JS动态渲染 -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 列表视图 ==================== -->
+    <section class="view-panel" id="view-list" style="display:none">
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-6);flex-wrap:wrap;gap:var(--space-4)">
+          <h3 style="font-size:24px;font-weight:700">全部任务列表</h3>
+          <div style="display:flex;gap:var(--space-3);flex-wrap:wrap">
+            <label for="task-search" class="sr-only">搜索任务</label>
+            <input class="form-input" id="task-search" placeholder="搜索任务…" style="width:200px;font-size:14px">
+            <button class="btn btn-small">排序</button>
+            <button class="btn btn-small btn-warning">筛选</button>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+          <!-- 任务列表项 -->
+          <div class="task-item">
+            <input type="checkbox" class="task-checkbox" checked>
+            <p class="task-text completed">客户紧急需求评审会议</p>
+            <div class="tag-group">
+              <span class="tag tag-pill" style="background:var(--coral-dark);color:var(--white);border-color:var(--coral);font-size:10px">紧急</span>
+            </div>
+            <div class="task-actions">
+              <button class="task-btn-edit"><svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none"><path d="M15.232 5.232l3.536 3.536M9 11l7.5-7.5a2 2 0 0 1 2.828 0l1.172 1.172a2 2 0 0 1 0 2.828L11 17H7v-4l8.5-8.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button class="task-btn-delete"><svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+            </div>
+          </div>
+          <div class="task-item">
+            <input type="checkbox" class="task-checkbox">
+            <p class="task-text">修复线上生产致命Bug，今日18点前上线</p>
+            <div class="tag-group">
+              <span class="tag tag-pill" style="background:var(--coral-dark);color:var(--white);border-color:var(--coral);font-size:10px">紧急</span>
+              <span class="tag tag-pill" style="background:var(--blue);font-size:10px">技术</span>
+            </div>
+            <div class="task-actions">
+              <button class="task-btn-edit"><svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none"><path d="M15.232 5.232l3.536 3.536M9 11l7.5-7.5a2 2 0 0 1 2.828 0l1.172 1.172a2 2 0 0 1 0 2.828L11 17H7v-4l8.5-8.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button class="task-btn-delete"><svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+            </div>
+          </div>
+          <div class="task-item">
+            <input type="checkbox" class="task-checkbox">
+            <p class="task-text">学习React19 + SQLite-Wasm本地数据库</p>
+            <div class="tag-group">
+              <span class="tag tag-pill" style="background:var(--blue);font-size:10px">技术</span>
+              <span class="tag tag-pill" style="background:var(--yellow);font-size:10px">长期</span>
+            </div>
+            <div class="task-actions">
+              <button class="task-btn-edit"><svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none"><path d="M15.232 5.232l3.536 3.536M9 11l7.5-7.5a2 2 0 0 1 2.828 0l1.172 1.172a2 2 0 0 1 0 2.828L11 17H7v-4l8.5-8.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button class="task-btn-delete"><svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+            </div>
+          </div>
+          <div class="task-item">
+            <input type="checkbox" class="task-checkbox">
+            <p class="task-text">整理会议纪要，同步给团队成员</p>
+            <div class="tag-group">
+              <span class="tag tag-pill" style="background:var(--cyan);font-size:10px">日常</span>
+            </div>
+            <div class="task-actions">
+              <button class="task-btn-edit"><svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none"><path d="M15.232 5.232l3.536 3.536M9 11l7.5-7.5a2 2 0 0 1 2.828 0l1.172 1.172a2 2 0 0 1 0 2.828L11 17H7v-4l8.5-8.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button class="task-btn-delete"><svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+            </div>
+          </div>
+          <div class="task-item">
+            <input type="checkbox" class="task-checkbox">
+            <p class="task-text">Q2项目复盘报告（截止日期：7月14日）</p>
+            <div class="tag-group">
+              <span class="tag tag-pill" style="background:var(--blue);font-size:10px">重要</span>
+              <span class="tag tag-pill" style="background:var(--coral-dark);color:var(--white);border-color:var(--coral);font-size:10px">即将截止</span>
+            </div>
+            <div class="task-actions">
+              <button class="task-btn-edit"><svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none"><path d="M15.232 5.232l3.536 3.536M9 11l7.5-7.5a2 2 0 0 1 2.828 0l1.172 1.172a2 2 0 0 1 0 2.828L11 17H7v-4l8.5-8.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button class="task-btn-delete"><svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <!-- 分页 -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-6)">
+          <span style="font-size:13px;color:var(--medium-gray)">共 12 条任务</span>
+          <div style="display:flex;gap:var(--space-2)">
+            <button class="btn btn-small" disabled style="opacity:.4">上一页</button>
+            <button class="btn btn-small btn-primary">1</button>
+            <button class="btn btn-small">2</button>
+            <button class="btn btn-small">下一页</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- 底部功能卡片区域 -->
+    <section class="grid-2">
+      <!-- 标签管理卡片 -->
+      <div class="card">
+        <h3 style="font-size:24px;font-weight:700;margin-bottom:var(--space-4);display:flex;align-items:center;gap:var(--space-2)">
+          <svg aria-hidden="true" focusable="false" class="icon icon-20" viewBox="0 0 24 24" fill="none">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L3 13V3h10l8.59 8.59a2 2 0 0 1 0 2.82z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <circle cx="7" cy="7" r="1.5" fill="currentColor"/>
+          </svg>
+          标签管理
+        </h3>
+        <div class="tag-group" style="margin-bottom:var(--space-6)">
+          <span class="tag tag-pill" style="background:var(--blue)">技术开发</span>
+          <span class="tag tag-pill" style="background:var(--coral-dark);color:var(--white);border-color:var(--coral)">紧急业务</span>
+          <span class="tag tag-pill" style="background:var(--yellow)">个人成长</span>
+          <span class="tag tag-pill" style="background:var(--cyan)">日常琐事</span>
+        </div>
+        <div style="display:flex;gap:var(--space-3)">
+          <label for="new-tag-name" class="sr-only">新建标签名称</label>
+          <input class="form-input" id="new-tag-name" placeholder="新建标签名称" style="flex:1">
+          <button class="btn btn-small">创建</button>
+        </div>
+      </div>
+
+      <!-- 快捷操作卡片 -->
+      <div class="card">
+        <h3 style="font-size:24px;font-weight:700;margin-bottom:var(--space-4);display:flex;align-items:center;gap:var(--space-2)">
+          <svg aria-hidden="true" focusable="false" class="icon icon-20" viewBox="0 0 24 24" fill="none">
+            <path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          批量快捷操作
+        </h3>
+        <div class="btn-group" style="display:flex;flex-wrap:wrap;gap:var(--space-3)">
+          <button class="btn btn-small">
+            <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+              <path d="M9 11l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            清空已完成
+          </button>
+          <button class="btn btn-small btn-danger">
+            <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+              <path d="M5 7h14M10 7V4h4v3M6 7v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            删除全部
+          </button>
+          <button class="btn btn-small btn-warning">
+            <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+              <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            统计面板
+          </button>
+          <button class="btn btn-small">
+            <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+              <rect x="4" y="6" width="16" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+              <path d="M8 6V4h8v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M8 10l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            PWA安装
+          </button>
+        </div>
+        <p style="margin-top:var(--space-4);font-size:12px;color:var(--medium-gray)">
+          所有数据本地OPFS持久化存储，离线可完整使用
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <!-- 统计弹窗（默认隐藏） -->
+  <div class="modal-overlay" id="statsModal" role="dialog" aria-modal="true" aria-labelledby="statsModalTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="statsModalTitle">任务数据统计</h4>
+        <button class="modal-close" onclick="closeModal()">
+          <svg aria-hidden="true" focusable="false" class="icon icon-24" viewBox="0 0 24 24" fill="none">
+            <path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="tab-bar">
+          <span class="tab-btn active">
+            <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+              <rect x="4" y="8" width="4" height="12" rx="1" fill="currentColor" opacity=".7"/>
+              <rect x="10" y="4" width="4" height="16" rx="1" fill="currentColor" opacity=".7"/>
+              <rect x="16" y="6" width="4" height="14" rx="1" fill="currentColor" opacity=".7"/>
+            </svg>
+            图表视图
+          </span>
+          <span class="tab-btn">
+            <svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none">
+              <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            明细列表
+          </span>
+        </div>
+        <div class="stats-summary-grid">
+          <div class="stat-card"><div class="stat-value dark">12</div><div class="stat-label">总任务</div></div>
+          <div class="stat-card"><div class="stat-value cyan">3</div><div class="stat-label">已完成</div></div>
+          <div class="stat-card"><div class="stat-value yellow">9</div><div class="stat-label">待处理</div></div>
+          <div class="stat-card"><div class="stat-value blue">25%</div><div class="stat-label">完成率</div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card" style="min-height:280px;display:flex;align-items:center;justify-content:center;color:var(--medium-gray);flex-direction:column;gap:var(--space-3)">
+            <svg aria-hidden="true" focusable="false" class="icon icon-32" viewBox="0 0 24 24" fill="none">
+              <rect x="4" y="12" width="4" height="8" rx="1" fill="currentColor" opacity=".7"/>
+              <rect x="10" y="8" width="4" height="12" rx="1" fill="currentColor" opacity=".7"/>
+              <rect x="16" y="4" width="4" height="16" rx="1" fill="currentColor" opacity=".7"/>
+            </svg>
+            四象限分布柱状图
+          </div>
+          <div class="card" style="min-height:280px;display:flex;align-items:center;justify-content:center;color:var(--medium-gray);flex-direction:column;gap:var(--space-3)">
+            <svg aria-hidden="true" focusable="false" class="icon icon-32" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 3v9l6.364 6.364" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M5 12h7" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            任务完成状态饼图
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 新建任务弹窗 ===== -->
+  <div class="modal-overlay" id="newTaskModal" role="dialog" aria-modal="true" aria-labelledby="newTaskTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="newTaskTitle">
+          <svg aria-hidden="true" focusable="false" class="icon icon-24" viewBox="0 0 24 24" fill="none">
+            <path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          新建任务
+        </h4>
+        <button class="modal-close" onclick="closeNewTaskModal()">
+          <svg aria-hidden="true" focusable="false" class="icon icon-24" viewBox="0 0 24 24" fill="none">
+            <path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form class="task-form" onsubmit="event.preventDefault(); showToast('任务已创建 ✓', 'success'); closeNewTaskModal()">
+          <!-- 任务标题 -->
+          <div>
+            <label for="task-title">任务名称</label>
+            <input class="form-input" id="task-title" placeholder="输入任务名称…" value="设计用户反馈收集系统" autofocus>
+          </div>
+
+          <!-- 描述 -->
+          <div>
+            <label for="task-desc">详细描述</label>
+            <textarea class="form-input" id="task-desc" placeholder="添加备注、链接或说明…">在个人中心页面新增反馈入口，支持文字和截图上传，数据存入本地 OPFS。</textarea>
+          </div>
+
+          <!-- 优先级 -->
+          <div class="task-form-row">
+            <div>
+              <label>所属象限（优先级）</label>
+              <div class="priority-group">
+                <button type="button" class="priority-btn coral active" onclick="selectPriority(this)" data-quadrant="coral">
+                  <span class="p-dot coral"></span>紧急·重要
+                </button>
+                <button type="button" class="priority-btn blue" onclick="selectPriority(this)" data-quadrant="blue">
+                  <span class="p-dot blue"></span>重要·不紧急
+                </button>
+                <button type="button" class="priority-btn yellow" onclick="selectPriority(this)" data-quadrant="yellow">
+                  <span class="p-dot yellow"></span>紧急·不重要
+                </button>
+                <button type="button" class="priority-btn cyan" onclick="selectPriority(this)" data-quadrant="cyan">
+                  <span class="p-dot cyan"></span>不紧急·不重要
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 时间范围 -->
+          <div>
+            <label>时间范围</label>
+            <div class="task-time-range">
+              <input class="form-input" id="task-start" type="datetime-local" value="2026-08-14T09:00:00">
+              <span class="time-range-sep">至</span>
+              <input class="form-input" id="task-end" type="datetime-local" value="2026-08-14T18:00:00">
+            </div>
+          </div>
+
+          <!-- 标签 -->
+          <div>
+            <label>标签</label>
+            <div class="tag-select">
+              <span class="tag tag-pill active" style="background:var(--blue);cursor:pointer" onclick="this.classList.toggle('active')">技术开发</span>
+              <span class="tag tag-pill active" style="background:var(--coral-dark);color:var(--white);border-color:var(--coral-dark);cursor:pointer" onclick="this.classList.toggle('active')">产品需求</span>
+              <span class="tag tag-pill" style="background:var(--yellow);cursor:pointer" onclick="this.classList.toggle('active')">个人成长</span>
+              <span class="tag tag-pill" style="background:var(--cyan);cursor:pointer" onclick="this.classList.toggle('active')">日常事务</span>
+            </div>
+          </div>
+
+          <!-- 操作按钮 -->
+          <div class="task-form-actions">
+            <button type="button" class="btn btn-small" onclick="closeNewTaskModal()">取消</button>
+            <button type="submit" class="btn btn-small btn-primary">创建任务</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS：视图切换、日历渲染、下拉菜单、模态弹窗 -->
+  <script>
+    // ==================== 日历引擎 ====================
+    let currentYear = 2026;
+    let currentMonth = 6; // 0-indexed: 6 = 7月
+    const today = new Date(2026, 6, 28);
+
+    const MONTHS_CN = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+    const WEEKDAYS_CN = ['日','一','二','三','四','五','六'];
+    const WEEKDAYS_FULL = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+
+    // 模拟日历任务数据
+    const calendarTasks = {
+      '2026-7-6': [
+        { text: '学习React19 + SQLite-Wasm', color: 'blue', done: false },
+        { text: '整理学习笔记', color: 'yellow', done: false }
+      ],
+      '2026-7-10': [
+        { text: '客户紧急需求评审会议', color: 'coral', done: true }
+      ],
+      '2026-7-14': [
+        { text: 'Q2项目复盘报告', color: 'blue', done: false },
+        { text: '团队1-on-1沟通', color: 'yellow', done: false },
+        { text: '更新项目文档', color: 'cyan', done: false }
+      ],
+      '2026-7-15': [
+        { text: '整理周报', color: 'cyan', done: false }
+      ],
+      '2026-7-17': [
+        { text: '提交代码Review', color: 'coral', done: false }
+      ],
+      '2026-7-21': [
+        { text: '修复线上生产致命Bug', color: 'coral', done: false },
+        { text: '发布补丁版本', color: 'yellow', done: false }
+      ],
+      '2026-7-22': [
+        { text: '客户需求变更沟通', color: 'coral', done: true }
+      ],
+      '2026-7-28': [
+        { text: '修复线上生产致命Bug', color: 'coral', done: false },
+        { text: '客户紧急需求评审会议', color: 'coral', done: false },
+        { text: '整理团队周报', color: 'blue', done: false },
+        { text: '每日站会', color: 'cyan', done: true }
+      ],
+      '2026-7-31': [
+        { text: '月度总结报告', color: 'blue', done: false }
+      ],
+      '2026-8-3': [
+        { text: '启动Q3新项目', color: 'coral', done: false }
+      ],
+      '2026-8-10': [
+        { text: '中期检查点', color: 'yellow', done: false }
+      ],
+      '2026-8-18': [
+        { text: '技术分享会', color: 'blue', done: false }
+      ]
+    };
+
+    // 跨多日事件数据
+    const multiDayEvents = [
+      { id: 'm1', text: 'Q3 产品迭代 Sprint', color: 'blue', start: '2026-7-20', end: '2026-8-2', done: false },
+      { id: 'm2', text: 'Team Building 团建', color: 'yellow', start: '2026-7-24', end: '2026-7-26', done: true },
+      { id: 'm3', text: '年中述职报告', color: 'coral', start: '2026-7-27', end: '2026-7-30', done: false }
+    ];
+
+    function isDateBetween(target, startKey, endKey) {
+      const t = new Date(target), s = new Date(startKey), e = new Date(endKey);
+      e.setHours(23, 59, 59, 999);
+      return t >= s && t <= e;
+    }
+    function dateKeyStr(year, month, day) { return year + '-' + (month + 1) + '-' + day; }
+
+    function renderCalendar(year, month) {
+      const grid = document.getElementById('calendarGrid');
+      // 保留weekday行，清除日单元格
+      while (grid.children.length > 7) {
+        grid.removeChild(grid.lastChild);
+      }
+
+      document.getElementById('calendarMonthYear').textContent = year + '年 ' + MONTHS_CN[month];
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+      // 上月补齐
+      for (let i = firstDay - 1; i >= 0; i--) {
+        const cell = createDayCell(year, month - 1, daysInPrevMonth - i, true);
+        grid.appendChild(cell);
+      }
+      // 本月
+      for (let d = 1; d <= daysInMonth; d++) {
+        const cell = createDayCell(year, month, d, false);
+        grid.appendChild(cell);
+      }
+      // 下月补齐
+      const totalCells = grid.children.length;
+      const remaining = 7 - (totalCells % 7 === 0 ? 0 : 7 - totalCells % 7);
+      if (remaining < 7) {
+        for (let i = 1; i <= remaining; i++) {
+          const cell = createDayCell(year, month + 1, i, true);
+          grid.appendChild(cell);
+        }
+      }
+
+      // 跨多日事件 — 覆盖式横条
+      requestAnimationFrame(() => renderMultiDayOverlays(grid, year, month));
+    }
+
+    function renderMultiDayOverlays(grid, year, month) {
+      grid.querySelectorAll('.cal-multi-overlay').forEach(el => el.remove());
+      const allCells = Array.from(grid.querySelectorAll('.calendar-cell'));
+      const fDay = new Date(year, month, 1);
+      const lDay = new Date(year, month + 1, 0);
+      const visibleEvents = multiDayEvents.filter(ev => {
+        const s = new Date(ev.start), e = new Date(ev.end); e.setHours(23,59,59,999);
+        return !(e < fDay || s > lDay);
+      });
+      // 同行事件堆叠跟踪
+      const rowStack = {};
+      visibleEvents.forEach((ev) => {
+        const s = new Date(ev.start), evEnd = new Date(ev.end); evEnd.setHours(23,59,59,999);
+        const os = new Date(Math.max(s.getTime(), fDay.getTime()));
+        const oe = new Date(Math.min(evEnd.getTime(), lDay.getTime()));
+        const si = allCells.findIndex(c => {
+          const dn = c.querySelector('.calendar-day-number');
+          return dn && parseInt(dn.textContent) === os.getDate() && !c.classList.contains('other-month');
+        });
+        const ei = allCells.findIndex(c => {
+          const dn = c.querySelector('.calendar-day-number');
+          return dn && parseInt(dn.textContent) === oe.getDate() && !c.classList.contains('other-month');
+        });
+        if (si === -1 || ei === -1 || si > ei) return;
+        const sr = allCells[si].getBoundingClientRect();
+        const er = allCells[ei].getBoundingClientRect();
+        const gr = grid.getBoundingClientRect();
+
+        // 计算所在行号用于堆叠
+        const rowIdx = Math.floor(si / 7);
+        if (!rowStack[rowIdx]) rowStack[rowIdx] = 0;
+        const stackOffset = rowStack[rowIdx] * 24;
+        rowStack[rowIdx]++;
+
+        const bar = document.createElement('div');
+        bar.className = 'cal-multi-overlay ' + ev.color + (ev.done ? ' done' : '');
+        bar.textContent = ev.text;
+        bar.title = ev.text + ' (' + ev.start + ' ~ ' + ev.end + ')';
+        bar.style.left = (sr.left - gr.left) + 'px';
+        bar.style.width = (er.right - sr.left) + 'px';
+        bar.style.top = (sr.top - gr.top + stackOffset) + 'px';
+        bar.style.position = 'absolute';
+        grid.appendChild(bar);
+      });
+    }
+
+    function createDayCell(year, month, day, otherMonth) {
+      const cell = document.createElement('div');
+      cell.className = 'calendar-cell';
+      if (otherMonth) cell.classList.add('other-month');
+
+      const dateKey = year + '-' + (month + 1) + '-' + day;
+      const tasks = calendarTasks[dateKey] || [];
+
+      // 判断今天
+      if (!otherMonth && year === today.getFullYear() && month === today.getMonth() && day === today.getDate()) {
+        cell.classList.add('today');
+      }
+      if (tasks.length > 0) cell.classList.add('has-task');
+
+      // 日期号
+      const dayNum = document.createElement('div');
+      dayNum.className = 'calendar-day-number';
+      dayNum.textContent = day;
+      cell.appendChild(dayNum);
+
+      // 任务列表
+      const taskContainer = document.createElement('div');
+      taskContainer.className = 'calendar-cell-tasks';
+
+      if (tasks.length > 0) {
+        tasks.slice(0, 3).forEach(t => {
+          const el = document.createElement('div');
+          el.className = 'cal-task' + (t.done ? ' cal-task-done' : '');
+          el.innerHTML = '<span class="cal-task-dot ' + t.color + '"></span><span class="cal-task-text">' + t.text + '</span>';
+          taskContainer.appendChild(el);
+          cell.classList.add('has-task');
+        });
+        if (tasks.length > 3) {
+          const more = document.createElement('div');
+          more.className = 'cal-more-link';
+          more.textContent = '+' + (tasks.length - 3) + ' 更多';
+          taskContainer.appendChild(more);
+        }
+      }
+
+      // 标记跨多日事件（用于后续 overlay 渲染）
+      const td = new Date(year, month, day);
+      if (multiDayEvents.some(ev => { const s = new Date(ev.start), e = new Date(ev.end); e.setHours(23,59,59,999); return td >= s && td <= e; })) {
+        cell.classList.add('has-multi-event');
+        cell.dataset.multiEventCount = multiDayEvents.filter(ev => { const s = new Date(ev.start), e = new Date(ev.end); e.setHours(23,59,59,999); return td >= s && td <= e; }).length;
+      }
+
+      if (taskContainer.children.length > 0) cell.appendChild(taskContainer);
+
+      // 点击选中日
+      cell.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectDate(year, month, day, dateKey);
+      });
+
+      return cell;
+    }
+
+    function selectDate(year, month, day, dateKey) {
+      const title = document.getElementById('selectedDateTitle');
+      const dateObj = new Date(year, month, day);
+      title.textContent = year + '年' + (month + 1) + '月' + day + '日 ' + WEEKDAYS_FULL[dateObj.getDay()];
+
+      // 高亮选中单元格
+      document.querySelectorAll('.calendar-cell').forEach(c => c.classList.remove('selected'));
+      document.querySelectorAll('.calendar-cell').forEach(c => {
+        const num = c.querySelector('.calendar-day-number');
+        if (num && parseInt(num.textContent) === day) {
+          // 检查是否属于正确月份 — 非 other-month
+          if (!c.classList.contains('other-month')) {
+            c.classList.add('selected');
+          }
+        }
+      });
+    }
+
+    function navigateMonth(delta) {
+      // 年份边界限制
+      const newYear = currentYear + delta;
+      if (newYear > 2100 || newYear < 2000) { showToast('已超出可用年份范围', 'warning'); return; }
+      if (calendarMode === 'year') {
+        currentYear = newYear;
+        renderYearView(currentYear);
+        document.getElementById('calendarMonthYear').textContent = currentYear + '年';
+        return;
+      }
+      if (calendarMode === 'week') {
+        currentWeekStart = new Date(currentWeekStart);
+        currentWeekStart.setDate(currentWeekStart.getDate() + delta * 7);
+        renderWeekView(currentWeekStart);
+        return;
+      }
+      if (calendarMode === 'day') {
+        currentDay = new Date(currentDay);
+        currentDay.setDate(currentDay.getDate() + delta);
+        renderDayView(currentDay);
+        return;
+      }
+      // month mode
+      currentMonth += delta;
+      if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+      if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+      renderCalendar(currentYear, currentMonth);
+      if (currentYear === today.getFullYear() && currentMonth === today.getMonth()) {
+        selectDate(today.getFullYear(), today.getMonth(), today.getDate(), '');
+      }
+    }
+
+    function goToToday() {
+      currentYear = today.getFullYear();
+      currentMonth = today.getMonth();
+      if (calendarMode === 'year') {
+        renderYearView(currentYear);
+        document.getElementById('calendarMonthYear').textContent = currentYear + '年';
+        return;
+      }
+      if (calendarMode === 'week') {
+        currentWeekStart = getWeekStart(today);
+        renderWeekView(currentWeekStart);
+        return;
+      }
+      if (calendarMode === 'day') {
+        currentDay = new Date(today);
+        renderDayView(currentDay);
+        return;
+      }
+      renderCalendar(currentYear, currentMonth);
+      selectDate(today.getFullYear(), today.getMonth(), today.getDate(), '');
+    }
+
+    // ==================== 年视图 ====================
+    let calendarMode = 'month'; // 'month' | 'week' | 'day' | 'year'
+
+    function renderYearView(year) {
+      const grid = document.getElementById('yearGrid');
+      grid.innerHTML = '';
+      for (let m = 0; m < 12; m++) {
+        const card = document.createElement('div');
+        card.className = 'year-month-card';
+        card.dataset.month = m;
+
+        const title = document.createElement('div');
+        title.className = 'year-month-title';
+        title.textContent = (m + 1) + '月';
+        card.appendChild(title);
+
+        const wd = document.createElement('div');
+        wd.className = 'year-month-weekdays';
+        ['日','一','二','三','四','五','六'].forEach((d, i) => {
+          const span = document.createElement('span');
+          span.className = 'year-month-weekday' + (i >= 5 ? ' weekend' : '');
+          span.textContent = d;
+          wd.appendChild(span);
+        });
+        card.appendChild(wd);
+
+        const daysGrid = document.createElement('div');
+        daysGrid.className = 'year-month-days';
+
+        const firstDay = new Date(year, m, 1).getDay();
+        const daysInMonth = new Date(year, m + 1, 0).getDate();
+        const daysInPrev = new Date(year, m, 0).getDate();
+
+        for (let i = firstDay - 1; i >= 0; i--) {
+          const d = document.createElement('div');
+          d.className = 'year-month-day other-month';
+          d.textContent = daysInPrev - i;
+          daysGrid.appendChild(d);
+        }
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dayEl = document.createElement('div');
+          dayEl.className = 'year-month-day';
+          dayEl.textContent = d;
+
+          const dateKey = year + '-' + (m + 1) + '-' + d;
+          const tasks = calendarTasks[dateKey] || [];
+          if (tasks.length > 0) {
+            dayEl.classList.add('has-task');
+            const c = tasks[0].color;
+            if (c === 'blue') dayEl.classList.add('has-task-blue');
+            else if (c === 'yellow') dayEl.classList.add('has-task-yellow');
+            else if (c === 'cyan') dayEl.classList.add('has-task-cyan');
+          }
+
+          if (year === today.getFullYear() && m === today.getMonth() && d === today.getDate()) {
+            dayEl.classList.add('today');
+          }
+
+          daysGrid.appendChild(dayEl);
+        }
+        const total = daysGrid.children.length;
+        const rem = 7 - (total % 7 === 0 ? 0 : total % 7);
+        if (rem < 7) {
+          for (let i = 1; i <= rem; i++) {
+            const d = document.createElement('div');
+            d.className = 'year-month-day other-month';
+            d.textContent = i;
+            daysGrid.appendChild(d);
+          }
+        }
+
+        card.appendChild(daysGrid);
+
+        let taskCount = 0, doneCount = 0;
+        for (let d = 1; d <= daysInMonth; d++) {
+          const tasks = calendarTasks[year + '-' + (m + 1) + '-' + d] || [];
+          taskCount += tasks.length;
+          doneCount += tasks.filter(t => t.done).length;
+        }
+        if (taskCount > 0) {
+          const summary = document.createElement('div');
+          summary.className = 'year-month-summary';
+          summary.innerHTML = '<span><span class="dot" style="background:var(--coral)"></span> ' + taskCount + '</span>' +
+            (doneCount > 0 ? '<span><span class="dot" style="background:var(--cyan)"></span> ' + doneCount + '</span>' : '');
+          card.appendChild(summary);
+        }
+
+        card.addEventListener('click', () => {
+          currentYear = year;
+          currentMonth = m;
+          switchToMonthView();
+        });
+
+        grid.appendChild(card);
+      }
+    }
+
+    // ==================== 周视图 ====================
+    let currentWeekStart = getWeekStart(today);
+
+    function getWeekStart(date) {
+      const d = new Date(date);
+      const day = d.getDay(); // 0=Sun
+      d.setDate(d.getDate() - day);
+      d.setHours(0,0,0,0);
+      return d;
+    }
+
+    function formatDateKey(y, m, d) { return y + '-' + (m + 1) + '-' + d; }
+
+    function renderWeekView(weekStart) {
+      const grid = document.getElementById('weekGrid');
+      grid.innerHTML = '';
+
+      currentWeekStart = weekStart;
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+
+      document.getElementById('calendarMonthYear').textContent =
+        (weekStart.getMonth() + 1) + '月' + weekStart.getDate() + '日 - ' +
+        (weekEnd.getMonth() + 1) + '月' + weekEnd.getDate() + '日';
+
+      // 空时间格 + 7天列头
+      const corner = document.createElement('div');
+      corner.className = 'week-time-cell';
+      corner.style.background = 'var(--bg-beige)';
+      corner.textContent = '';
+      grid.appendChild(corner);
+
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(weekStart);
+        d.setDate(d.getDate() + i);
+        const header = document.createElement('div');
+        header.className = 'week-day-header' +
+          (d.getDay() >= 5 ? ' weekend' : '') +
+          (isSameDay(d, today) ? ' today' : '');
+        header.innerHTML = '<div class="wd-name">' + WEEKDAYS_CN[d.getDay()] + '</div>' +
+          '<div class="wd-date">' + d.getDate() + '</div>';
+        grid.appendChild(header);
+      }
+
+      // 跨多日事件 — 独立容器（在网格上方）
+      const multiContainer = document.getElementById('weekMultiEvents');
+      multiContainer.innerHTML = '';
+      const wDays = []; for (let i = 0; i < 7; i++) { const d = new Date(weekStart); d.setDate(d.getDate() + i); wDays.push(d); }
+      multiDayEvents.forEach(ev => {
+        const s = new Date(ev.start), evEnd = new Date(ev.end); evEnd.setHours(23,59,59,999);
+        const ws = wDays[0].getTime(), we = wDays[6].getTime() + 86400000;
+        if (evEnd.getTime() < ws || s.getTime() > we) return;
+        const bar = document.createElement('div');
+        bar.className = 'week-multi-bar ' + ev.color + (ev.done ? ' done' : '');
+        bar.innerHTML = '<svg class="dm-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="6" width="16" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M4 12h16" stroke="currentColor" stroke-width="2"/></svg>' + ev.text + '<span class="wm-range">' + ev.start + ' ~ ' + ev.end + '</span>';
+        multiContainer.appendChild(bar);
+      });
+
+      // 时间段 06:00 ~ 22:00
+      for (let h = 6; h <= 22; h++) {
+        const timeLabel = document.createElement('div');
+        timeLabel.className = 'week-time-cell';
+        timeLabel.textContent = h + ':00';
+        grid.appendChild(timeLabel);
+
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(weekStart);
+          d.setDate(d.getDate() + i);
+          const col = document.createElement('div');
+          col.className = 'week-day-col' + (isSameDay(d, today) ? ' today-col' : '');
+
+          const dateKey = formatDateKey(d.getFullYear(), d.getMonth(), d.getDate());
+          const tasks = calendarTasks[dateKey] || [];
+          // 只在本日第一个时间格显示任务
+          if (h === 6) {
+            tasks.forEach(t => {
+              const el = document.createElement('div');
+              el.className = 'week-task ' + t.color + (t.done ? ' done' : '');
+              el.innerHTML = '<div class="week-task-text">' + t.text + '</div>';
+              col.appendChild(el);
+            });
+          }
+          grid.appendChild(col);
+        }
+      }
+    }
+
+    // ==================== 日视图 ====================
+    let currentDay = new Date(today);
+
+    // 时间映射表 — 任务文本 → 小时
+    const TASK_HOURS = { '修复线上生产致命Bug': 10, '客户紧急需求评审会议': 14, '整理团队周报': 16, '每日站会': 9, '发布补丁版本': 11, 'Q2项目复盘报告': 9, '团队1-on-1沟通': 15, '更新项目文档': 13, '提交代码Review': 17, '启动Q3新项目': 10, '技术分享会': 14, '月度总结报告': 16, '中期检查点': 11, '客户需求变更沟通': 14, '整理学习笔记': 14 };
+    function getTaskHour(t) { return TASK_HOURS[t.text] !== undefined ? TASK_HOURS[t.text] : -1; }
+
+    function renderDayView(day) {
+      const timeline = document.getElementById('dayTimeline');
+      timeline.innerHTML = '';
+      const multiBox = document.getElementById('dayMultiEvents');
+      multiBox.innerHTML = '';
+      currentDay = day;
+
+      document.getElementById('calendarMonthYear').textContent =
+        day.getFullYear() + '年 ' + (day.getMonth() + 1) + '月' + day.getDate() + '日 ' + WEEKDAYS_FULL[day.getDay()];
+
+      const dateKey = formatDateKey(day.getFullYear(), day.getMonth(), day.getDate());
+      const dayTasks = calendarTasks[dateKey] || [];
+
+      // 跨多日事件（在时间线上方独立堆叠，不重叠）
+      multiDayEvents.forEach(ev => {
+        const s = new Date(ev.start), e = new Date(ev.end); e.setHours(23,59,59,999);
+        if (day >= s && day <= e) {
+          const bar = document.createElement('div');
+          bar.className = 'day-multi-bar ' + ev.color + (ev.done ? ' done' : '');
+          bar.innerHTML = '<svg class="dm-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="6" width="16" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M4 12h16" stroke="currentColor" stroke-width="2"/><path d="M8 10v4M16 10v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>' + ev.text + '<span class="dm-range">' + ev.start + ' ~ ' + ev.end + '</span>';
+          multiBox.appendChild(bar);
+        }
+      });
+
+      // 按小时分组
+      const tasksByHour = {};
+      dayTasks.forEach(t => {
+        const h = getTaskHour(t);
+        if (!tasksByHour[h]) tasksByHour[h] = [];
+        tasksByHour[h].push(t);
+      });
+
+      for (let h = 6; h <= 22; h++) {
+        const label = document.createElement('div');
+        label.className = 'day-hour-label';
+        label.textContent = h + ':00';
+        timeline.appendChild(label);
+
+        const cell = document.createElement('div');
+        cell.className = 'day-hour-cell';
+        if (h === day.getHours()) cell.classList.add('current');
+
+        // 该时段有任务才渲染
+        const hourTasks = tasksByHour[h] || [];
+        // 同样显示无时间任务（-1）在最前
+        if (h === 6 && tasksByHour[-1]) {
+          tasksByHour[-1].forEach(t => {
+            cell.appendChild(createDayTaskBlock(t, '全天'));
+          });
+        }
+        hourTasks.forEach(t => {
+          cell.appendChild(createDayTaskBlock(t, getTaskHour(t) + ':00'));
+        });
+
+        timeline.appendChild(cell);
+      }
+    }
+
+    function createDayTaskBlock(t, timeStr) {
+      const block = document.createElement('div');
+      block.className = 'day-task-block ' + t.color + (t.done ? ' done' : '');
+      block.innerHTML =
+        '<span class="dt-time">' + timeStr + '</span>' +
+        '<span class="dt-text">' + t.text + '</span>' +
+        '<span class="dt-tag" style="background:' + getColorBg(t.color) + '">' + getTagLabel(t.color) + '</span>';
+      return block;
+    }
+
+    function getColorBg(c) {
+      return c === 'coral' ? 'var(--coral)' : c === 'blue' ? 'var(--blue)' : c === 'yellow' ? 'var(--yellow)' : 'var(--cyan)';
+    }
+
+    function getTagLabel(c) {
+      return c === 'coral' ? '紧急' : c === 'blue' ? '重要' : c === 'yellow' ? '进行中' : '日常';
+    }
+
+    function isSameDay(a, b) {
+      return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    }
+
+    // ==================== Toast ====================
+    function showToast(message, type) {
+      type = type || 'success';
+      const container = document.getElementById('toastContainer');
+      const el = document.createElement('div');
+      el.className = 'toast ' + type;
+      const icons = { success: '<svg aria-hidden="true" focusable="false" class="icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>', error: '<svg aria-hidden="true" focusable="false" class="icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M8 8l8 8M16 8l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>', warning: '<svg aria-hidden="true" focusable="false" class="icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 8v4M12 16h0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' };
+      el.innerHTML = (icons[type] || icons.success) + message;
+      container.appendChild(el);
+      requestAnimationFrame(() => { el.classList.add('show'); });
+      setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 2500);
+    }
+
+    // 演示：页面加载后显示一条提示
+    setTimeout(() => showToast('欢迎使用 Duckly 🦆', 'success'), 600);
+
+    // ==================== 模式切换 ====================
+    function hideAllCalendarViews() {
+      document.querySelector('.calendar-layout').style.display = 'none';
+      document.getElementById('yearView').style.display = 'none';
+      document.getElementById('weekView').style.display = 'none';
+      document.getElementById('dayView').style.display = 'none';
+    }
+
+    function switchToMonthView() {
+      calendarMode = 'month';
+      hideAllCalendarViews();
+      document.querySelector('.calendar-layout').style.display = 'grid';
+      renderCalendar(currentYear, currentMonth);
+      if (currentYear === today.getFullYear() && currentMonth === today.getMonth()) {
+        selectDate(today.getFullYear(), today.getMonth(), today.getDate(), '');
+      }
+    }
+
+    function switchToWeekView() {
+      calendarMode = 'week';
+      hideAllCalendarViews();
+      document.getElementById('weekView').style.display = 'block';
+      renderWeekView(currentWeekStart || getWeekStart(today));
+    }
+
+    function switchToDayView() {
+      calendarMode = 'day';
+      hideAllCalendarViews();
+      document.getElementById('dayView').style.display = 'block';
+      if (currentDay) {
+        renderDayView(currentDay);
+      } else {
+        currentDay = new Date(today);
+        renderDayView(currentDay);
+      }
+    }
+
+    function switchToYearView() {
+      calendarMode = 'year';
+      hideAllCalendarViews();
+      document.getElementById('yearView').style.display = 'block';
+      renderYearView(currentYear);
+    }
+
+    // ==================== 日历视图模式切换 ====================
+    document.querySelectorAll('#calendarModeTabs .tab-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('#calendarModeTabs .tab-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        const mode = this.dataset.mode;
+        if (mode === 'month') switchToMonthView();
+        else if (mode === 'week') switchToWeekView();
+        else if (mode === 'day') switchToDayView();
+        else if (mode === 'year') switchToYearView();
+      });
+    });
+
+    // ==================== 视图切换 ====================
+    document.querySelectorAll('.tab-btn[data-view]').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.tab-bar .tab-btn').forEach(b => { b.classList.remove('active'); if (b.hasAttribute('aria-selected')) b.setAttribute('aria-selected', 'false'); });
+        this.classList.add('active');
+        if (this.hasAttribute('aria-selected')) this.setAttribute('aria-selected', 'true');
+
+        const view = this.dataset.view;
+        document.querySelectorAll('.view-panel').forEach(p => p.style.display = 'none');
+        const target = document.getElementById('view-' + view);
+        if (target) target.style.display = 'block';
+      });
+    });
+
+    // ==================== 通知面板 ====================
+    function toggleNotifPanel() {
+      const panel = document.getElementById('notifPanel');
+      panel.classList.toggle('open');
+      // 关闭其他下拉
+      document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
+    }
+    function updateNotifBadge() {
+      const count = document.querySelectorAll('.notif-item').length;
+      const badge = document.querySelector('.notif-badge');
+      if (badge) {
+        badge.textContent = count;
+        if (count === 0) badge.style.display = 'none';
+        else badge.style.display = 'flex';
+      }
+    }
+    // 点击外部关闭通知面板
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.notif-btn') && !e.target.closest('.notif-panel')) {
+        const panel = document.getElementById('notifPanel');
+        if (panel) panel.classList.remove('open');
+      }
+    });
+
+    // ==================== 下拉菜单 ====================
+    document.querySelectorAll('[data-toggle="dropdown"]').forEach(toggle => {
+      toggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const menu = this.nextElementSibling;
+        document.querySelectorAll('.dropdown-menu').forEach(m => {
+          if (m !== menu) m.style.display = 'none';
+        });
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+      });
+    });
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
+    });
+
+    // ==================== 安全存储（localStorage try/catch） ====================
+    function safeGetItem(key, fallback) {
+      try { return localStorage.getItem(key); } catch(e) { return fallback; }
+    }
+    function safeSetItem(key, value) {
+      try { localStorage.setItem(key, value); }
+      catch(e) {
+        if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_FILE_CORRUPTED') {
+          showToast('存储空间已满，请清除一些数据', 'error');
+        }
+      }
+    }
+
+    // ==================== 焦点锁定（模态/抽屉） ====================
+    function trapFocus(container) {
+      const focusable = container.querySelectorAll('button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (!focusable.length) return;
+      const first = focusable[0], last = focusable[focusable.length - 1];
+      function handler(e) {
+        if (e.key !== 'Tab') return;
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+      container.addEventListener('keydown', handler);
+      first.focus();
+      return () => container.removeEventListener('keydown', handler);
+    }
+    let releaseTrap = null;
+
+    // ==================== 设置抽屉 & 暗黑模式 ====================
+    function openDrawer() {
+      const drawer = document.getElementById('settingsDrawer');
+      drawer.classList.add('open');
+      document.getElementById('drawerOverlay').classList.add('open');
+      if (releaseTrap) releaseTrap();
+      releaseTrap = trapFocus(drawer);
+    }
+    function closeDrawer() {
+      document.getElementById('settingsDrawer').classList.remove('open');
+      document.getElementById('drawerOverlay').classList.remove('open');
+      if (releaseTrap) { releaseTrap(); releaseTrap = null; }
+    }
+    function toggleDarkMode(el) {
+      el.classList.toggle('on');
+      const isDark = el.classList.contains('on');
+      el.setAttribute('aria-checked', isDark);
+      document.documentElement.classList.toggle('dark', isDark);
+      safeSetItem('duckly-dark-mode', isDark ? '1' : '0');
+    }
+    // 恢复暗黑模式偏好
+    if (safeGetItem('duckly-dark-mode') === '1') {
+      document.documentElement.classList.add('dark');
+      const dt = document.getElementById('darkModeToggle');
+      if (dt) dt.classList.add('on');
+    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { closeDrawer(); closeModal(); }
+    });
+
+    // ==================== i18n 国际化基础设施 ====================
+    const i18n = {
+      zh: { new_task: '新建任务', today: '今天', settings: '设置', search: '搜索任务…', new_tag: '新建标签名称', webhook_url: 'Webhook URL' },
+      en: { new_task: 'New Task', today: 'Today', settings: 'Settings', search: 'Search tasks…', new_tag: 'New tag name', webhook_url: 'Webhook URL' }
+    };
+    const currentLang = safeGetItem('duckly-lang') || 'zh';
+
+    // ==================== 统计弹窗 ====================
+    document.querySelector('.btn-warning')?.addEventListener('click', () => {
+      const modal = document.getElementById('statsModal');
+      modal.classList.add('open');
+      if (releaseTrap) releaseTrap();
+      releaseTrap = trapFocus(modal);
+    });
+    function closeModal() {
+      document.getElementById('statsModal').classList.remove('open');
+      if (releaseTrap) { releaseTrap(); releaseTrap = null; }
+    }
+
+    // ==================== 新建任务弹窗 ====================
+    function openNewTaskModal() {
+      const modal = document.getElementById('newTaskModal');
+      modal.classList.add('open');
+      if (releaseTrap) releaseTrap();
+      releaseTrap = trapFocus(modal);
+      setTimeout(() => document.getElementById('task-title')?.focus(), 100);
+    }
+    function closeNewTaskModal() {
+      document.getElementById('newTaskModal').classList.remove('open');
+      if (releaseTrap) { releaseTrap(); releaseTrap = null; }
+    }
+    function selectPriority(el) {
+      el.closest('.priority-group').querySelectorAll('.priority-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+    }
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // ==================== 离线检测 ====================
+    function updateNetworkBadge(online) {
+      const badge = document.querySelector('.network-badge');
+      if (!badge) return;
+      badge.innerHTML = online
+        ? '<svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="#4DD4D0"/><path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 在线'
+        : '<svg aria-hidden="true" focusable="false" class="icon icon-16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="#FF6B6B"/><path d="M8 8l8 8M16 8l-8 8" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg> 离线';
+      badge.style.background = online ? 'var(--white)' : 'var(--coral)';
+      badge.style.color = online ? 'var(--text-primary)' : 'var(--white)';
+    }
+    window.addEventListener('online', () => { updateNetworkBadge(true); });
+    window.addEventListener('offline', () => { updateNetworkBadge(false); });
+
+    // ==================== 初始化渲染 ====================
+    renderCalendar(currentYear, currentMonth);
+    selectDate(today.getFullYear(), today.getMonth(), today.getDate(), '');
+  </script>
+</body>
+</html>

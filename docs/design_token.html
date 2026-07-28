@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Duckly Design System — Design Tokens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-beige:#F4EFEA;--white:#FFF;--dark-gray:#383838;--medium-gray:#666;--light-gray:#e0e0e0;
+      --blue:#6FC2FF;--cyan:#4DD4D0;--yellow:#FFD500;--coral:#FF6B6B;
+      --orange-primary:#FF9500;--orange-secondary:#FF6B00;--pink:#FFB6C1;
+      --font-sans:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+      --font-mono:'Monaco','Courier New',monospace;
+      --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;
+      --space-8:32px;--space-10:40px;--space-12:48px;--space-16:64px;--space-20:80px;
+      --radius-none:0px;--radius-sm:3px;--radius:4px;--radius-lg:8px;--radius-full:9999px;
+      --shadow-brutal:4px 4px 0 0 var(--dark-gray);
+      --shadow-brutal-active:2px 2px 0 0 var(--dark-gray);
+      --shadow-lg:0 10px 15px -3px rgba(0,0,0,.1);
+      --shadow-2xl:0 25px 50px -12px rgba(0,0,0,.25);
+      --border-default:2px solid var(--dark-gray);
+      --t:0.15s cubic-bezier(0.4,0,0.2,1);
+      --code-header:#2D2D2D;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--font-sans);color:var(--dark-gray);background:var(--bg-beige);line-height:1.5;-webkit-font-smoothing:antialiased}
+    .page-wrap{max-width:1280px;margin:0 auto;padding:var(--space-20) var(--space-6)}
+    @media(min-width:1024px){.page-wrap{padding:112px var(--space-6) var(--space-20)}}
+    .card{background:var(--white);border:var(--border-default);border-radius:var(--radius);padding:var(--space-8)}
+    .grid-2{display:grid;grid-template-columns:1fr;gap:var(--space-6)}
+    .grid-3{display:grid;grid-template-columns:1fr;gap:var(--space-6)}
+    .grid-4{display:grid;grid-template-columns:1fr;gap:var(--space-4)}
+    .grid-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--space-4)}
+    @media(min-width:640px){.grid-2{grid-template-columns:repeat(2,1fr)}.grid-3{grid-template-columns:repeat(2,1fr)}.grid-4{grid-template-columns:repeat(2,1fr)}}
+    @media(min-width:1024px){.grid-3{grid-template-columns:repeat(3,1fr)}.grid-4{grid-template-columns:repeat(4,1fr)}}
+    .section+.section{margin-top:var(--space-16)}
+    .hero{text-align:center;padding:var(--space-16) var(--space-8);margin-bottom:var(--space-16);background:var(--white);border:var(--border-default);border-radius:var(--radius);position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;top:0;left:0;right:0;height:6px;background:linear-gradient(90deg,var(--blue),var(--cyan),var(--yellow),var(--coral),var(--orange-primary))}
+    .hero h1{font-size:96px;font-weight:700;letter-spacing:-.05em;line-height:1;color:var(--dark-gray);margin-bottom:var(--space-4)}
+    @media(min-width:768px){.hero h1{font-size:128px}}
+    .hero .subtitle{font-size:20px;font-weight:500;color:var(--medium-gray);max-width:640px;margin:0 auto}
+    .section-header{font-size:48px;font-weight:700;letter-spacing:-.025em;margin-bottom:var(--space-16);color:var(--dark-gray)}
+    @media(min-width:768px){.section-header{font-size:60px}}
+    .section-sub{font-size:16px;color:var(--medium-gray);margin-top:-48px;margin-bottom:var(--space-8)}
+    .swatch{background:var(--white);border:var(--border-default);border-radius:var(--radius);overflow:hidden}
+    .swatch-color{height:100px;display:flex;align-items:flex-end;padding:var(--space-3)}
+    .swatch-color .hex{font-family:var(--font-mono);font-size:14px;font-weight:700;background:rgba(255,255,255,.85);padding:2px 8px;border-radius:var(--radius-sm)}
+    .swatch-color.dark .hex{color:var(--white);background:rgba(0,0,0,.4)}
+    .swatch-info{padding:var(--space-3)}
+    .swatch-info .name{font-size:14px;font-weight:700;color:var(--dark-gray)}
+    .swatch-info .usage{font-size:12px;color:var(--medium-gray);margin-top:2px}
+    .type-sample{background:var(--white);border:var(--border-default);border-radius:var(--radius);padding:var(--space-6);margin-bottom:var(--space-4)}
+    .type-sample .label{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--medium-gray);margin-bottom:var(--space-2)}
+    .btn{display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-sans);font-size:14px;font-weight:700;text-transform:uppercase;padding:var(--space-3) var(--space-8);border:var(--border-default);border-radius:var(--radius-none);cursor:default;background:var(--white);color:var(--dark-gray)}
+    .btn-primary{background:var(--blue)}
+    .btn-hover{transition:transform var(--t)}.btn-hover:hover{transform:translate(-1px,-1px)}
+    .btn-medium{padding:var(--space-3) var(--space-8)}.btn-small{padding:10px var(--space-6);font-size:13px}
+    .btn-group{display:flex;flex-wrap:wrap;gap:var(--space-4)}
+    .form-group{margin-bottom:var(--space-6)}
+    .form-label{display:block;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dark-gray);margin-bottom:var(--space-2)}
+    .form-input{display:block;width:100%;font-family:var(--font-sans);font-size:16px;color:var(--dark-gray);padding:var(--space-3) var(--space-5);border:var(--border-default);border-radius:var(--radius-none);background:var(--white);outline:none}
+    .form-input:focus{box-shadow:0 0 0 2px var(--blue)}.form-input::placeholder{color:var(--light-gray)}
+    .checkbox-group{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-3)}
+    .checkbox-custom{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border:2px solid var(--dark-gray);border-radius:3px;background:var(--white);flex-shrink:0}
+    .checkbox-custom.checked{background:var(--dark-gray)}
+    .checkbox-custom.checked .checkmark{display:block;width:5px;height:9px;border:solid var(--white);border-width:0 2px 2px 0;margin-top:-1px}
+    .checkbox-label{font-size:16px;color:var(--dark-gray)}
+    .tag{display:inline-flex;align-items:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:var(--space-1) var(--space-3);color:var(--dark-gray);border:var(--border-default)}
+    .tag-yellow{background:var(--yellow);border-radius:var(--radius)}
+    .tag-cyan{background:var(--cyan);border-radius:var(--radius-full)}
+    .tag-group{display:flex;gap:var(--space-3);flex-wrap:wrap}
+    .code-window{background:var(--white);border:var(--border-default);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-2xl)}
+    .code-window-header{background:var(--code-header);padding:var(--space-3) var(--space-4);display:flex;align-items:center;gap:var(--space-2)}
+    .window-dot{width:12px;height:12px;border-radius:50%;border:2px solid transparent}
+    .window-dot.red{background:#FF5F56;border-color:#FF5F56}
+    .window-dot.yellow{background:#FFBD2E;border-color:#FFBD2E}
+    .window-dot.green{background:#27C93F;border-color:#27C93F}
+    .code-window-body{padding:var(--space-5) var(--space-4);font-family:var(--font-mono);font-size:13px;line-height:1.6;color:var(--dark-gray);overflow-x:auto}
+    .code-window-body .sql-keyword{color:#00F}.code-window-body .sql-string{color:green}.code-window-body .sql-comment{color:gray}.code-window-body .sql-function{color:#795E26}
+    .feature-card{background:var(--white);border:var(--border-default);border-radius:var(--radius);padding:var(--space-8);min-height:340px;display:flex;flex-direction:column}
+    .feature-card .icon-placeholder{width:48px;height:48px;background:var(--blue);border:2px solid var(--dark-gray);border-radius:var(--radius);margin-bottom:var(--space-4);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700}
+    .feature-card h3{font-size:36px;font-weight:700;letter-spacing:-.025em;color:var(--dark-gray);margin-bottom:var(--space-3)}
+    @media(min-width:768px){.feature-card h3{font-size:42px}}
+    .feature-card p{font-size:18px;font-weight:500;color:var(--medium-gray);line-height:1.6}
+    .testimonial-card{background:var(--white);border:var(--border-default);border-radius:var(--radius);padding:var(--space-8);min-height:180px}
+    .testimonial-card blockquote{font-size:18px;font-weight:500;font-style:italic;color:var(--dark-gray);margin-bottom:var(--space-4)}
+    .testimonial-card .attribution{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--medium-gray)}
+    .divider{height:0;border:none;border-top:2px solid var(--light-gray);margin:var(--space-8) 0}
+    @media(max-width:480px){.hero h1{font-size:48px}.section-header{font-size:36px}.feature-card h3{font-size:28px}.feature-card p{font-size:16px}}
+
+    /* ---- App-specific components ---- */
+    .task-item{display:flex;align-items:flex-start;gap:var(--space-3);border:var(--border-default);padding:var(--space-4);background:var(--white);cursor:move;transition:color .15s,background-color .15s}
+    .task-item:hover{background:#f9f9f9}
+    .task-checkbox{display:block;width:20px;height:20px;border:2px solid var(--dark-gray);border-radius:var(--radius-sm);background:var(--white);cursor:pointer;-webkit-appearance:none;appearance:none;margin-top:2px;flex-shrink:0}
+    .task-checkbox:checked{background:var(--dark-gray)}
+    .task-text{flex:1;font-size:14px;font-weight:500;line-height:1.625;color:var(--dark-gray);user-select:none;word-break:break-word;min-width:0}
+    .task-actions{display:flex;gap:var(--space-2);flex-shrink:0}
+    .task-btn-edit{font-size:16px;font-weight:700;color:var(--dark-gray);background:0 0;border:none;cursor:pointer;padding:0;line-height:1.5;transition:color var(--t)}
+    .task-btn-edit:hover{color:var(--blue)}
+    .task-btn-delete{font-size:18px;font-weight:700;color:var(--coral);background:0 0;border:none;cursor:pointer;padding:0;line-height:1.555;transition:color var(--t)}
+    .task-btn-delete:hover{color:#dc2626}
+    .quadrant-card{background:var(--white);border:var(--border-default);border-radius:var(--radius);padding:var(--space-6)}
+    .quadrant-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-6)}
+    .quadrant-title-row{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-2)}
+    .quadrant-dot{width:16px;height:16px;border:2px solid var(--dark-gray);flex-shrink:0}
+    .quadrant-dot.coral{background:var(--coral)}.quadrant-dot.blue{background:var(--blue)}
+    .quadrant-dot.yellow{background:var(--yellow)}.quadrant-dot.cyan{background:var(--cyan)}
+    .quadrant-title{font-size:24px;font-weight:700;letter-spacing:-.025em;color:var(--dark-gray);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .quadrant-subtitle{font-size:14px;color:var(--medium-gray)}
+    .quadrant-add-btn{display:block;padding:8px 16px;font-family:var(--font-sans);font-size:12px;font-weight:700;text-transform:uppercase;border:var(--border-default);border-radius:var(--radius-none);cursor:default;transition:all var(--t);flex-shrink:0;margin-left:8px;color:var(--dark-gray)}
+    .quadrant-add-btn:hover{transform:translate(-2px,-2px)}
+    .quadrant-add-btn.coral{background:var(--coral)}.quadrant-add-btn.blue{background:var(--blue)}
+    .quadrant-add-btn.yellow{background:var(--yellow)}.quadrant-add-btn.cyan{background:var(--cyan)}
+    .drop-zone{min-height:100px;transition:all var(--t);overflow-y:auto}
+    .dropdown-toggle{display:inline-flex;align-items:center;gap:var(--space-1);padding:6px 12px;border:var(--border-default);border-radius:var(--radius-none);background:var(--white);color:var(--dark-gray);font-family:var(--font-sans);font-size:14px;font-weight:600;text-transform:uppercase;cursor:default;transition:transform var(--t)}
+    .dropdown-toggle:hover{transform:translate(-1px,-1px)}
+    .dropdown-arrow{font-size:11px;font-weight:600}
+    .dropdown-menu{position:absolute;right:0;top:100%;margin-top:4px;width:140px;background:var(--white);border:var(--border-default);box-shadow:0 4px 6px -1px rgba(0,0,0,.1);z-index:20}
+    .dropdown-item{display:block;width:100%;text-align:left;padding:8px 12px;font-family:var(--font-sans);font-size:14px;color:var(--dark-gray);background:0 0;border:none;cursor:default;transition:all var(--t)}
+    .dropdown-item:hover{background:var(--yellow);color:var(--dark-gray)}
+    .dropdown-item.active{background:var(--dark-gray);color:var(--white);font-weight:700}
+    .modal-overlay{position:fixed;inset:0;background:rgba(56,56,56,.5);display:flex;align-items:center;justify-content:center;z-index:50;padding:var(--space-4);overflow-y:auto}
+    .modal-content{background:var(--white);border:var(--border-default);max-width:1152px;width:100%;margin:var(--space-8) 0;max-height:90vh;overflow-y:auto}
+    .modal-header{display:flex;align-items:center;justify-content:space-between;padding:var(--space-8) var(--space-8) var(--space-6);position:sticky;top:0;background:var(--white);z-index:10;border-bottom:var(--border-default)}
+    .modal-title{font-size:30px;font-weight:700;letter-spacing:-.025em;color:var(--dark-gray)}
+    .modal-close{font-size:30px;font-weight:700;color:var(--dark-gray);background:0 0;border:none;cursor:default;padding:0;transition:opacity var(--t)}
+    .modal-close:hover{opacity:.7}
+    .modal-body{padding:0 var(--space-8) var(--space-8)}
+    .tab-bar{display:flex;gap:var(--space-3);margin:8px 0 var(--space-8)}
+    .tab-btn{display:block;padding:12px 24px;font-family:var(--font-sans);font-size:14px;font-weight:700;text-transform:uppercase;border:var(--border-default);border-radius:var(--radius-none);cursor:default}
+    .tab-btn.active{background:var(--blue)}.tab-btn:not(.active){background:var(--white)}
+    .stats-summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-4);margin-bottom:var(--space-8)}
+    .stat-card{background:var(--bg-beige);border:var(--border-default);border-radius:var(--radius);padding:var(--space-4);text-align:center}
+    .stat-card .stat-value{font-size:36px;font-weight:700}
+    .stat-card .stat-value.dark{color:var(--dark-gray)}.stat-card .stat-value.cyan{color:var(--cyan)}
+    .stat-card .stat-value.yellow{color:var(--yellow)}.stat-card .stat-value.blue{color:var(--blue)}
+    .stat-card .stat-label{font-size:14px;color:var(--medium-gray);margin-top:4px}
+    .stats-section-title{font-size:20px;font-weight:700;letter-spacing:-.025em;color:var(--dark-gray);margin-bottom:var(--space-4)}
+    .stats-charts-grid{display:grid;grid-template-columns:1fr;gap:var(--space-6)}
+    @media(min-width:1024px){.stats-charts-grid{grid-template-columns:1fr 1fr}}
+    .stats-chart-placeholder{min-height:280px;background:var(--white);border:var(--border-default);border-radius:var(--radius);padding:var(--space-6);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--space-3);text-align:center;color:var(--medium-gray);font-size:14px}
+    .stats-chart-placeholder .icon{font-size:48px}.stats-chart-placeholder .desc{font-weight:500}
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+<header class="hero">
+  <h1>Duckly</h1>
+  <p class="subtitle">Design System — Visual Token Reference</p>
+  <p style="margin-top:var(--space-6);font-size:14px;color:var(--medium-gray)">
+    All borders: 2px solid #383838 &bull; Background: #F4EFEA &bull; Font: Inter
+  </p>
+</header>
+
+<!-- ======== 1. COLOR PALETTE ======== -->
+<section class="section">
+  <h2 class="section-header">Color Palette</h2>
+  <div class="grid-auto">
+    <div class="swatch"><div class="swatch-color" style="background:var(--bg-beige)"><span class="hex">#F4EFEA</span></div><div class="swatch-info"><div class="name">Beige</div><div class="usage">Page bg</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:var(--white);border-bottom:2px solid var(--light-gray)"><span class="hex">#FFFFFF</span></div><div class="swatch-info"><div class="name">White</div><div class="usage">Cards, modals</div></div></div>
+    <div class="swatch"><div class="swatch-color dark" style="background:var(--dark-gray)"><span class="hex">#383838</span></div><div class="swatch-info"><div class="name">Dark Gray</div><div class="usage">Text, ALL borders</div></div></div>
+    <div class="swatch"><div class="swatch-color dark" style="background:var(--medium-gray)"><span class="hex">#666666</span></div><div class="swatch-info"><div class="name">Medium Gray</div><div class="usage">Secondary text</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:var(--light-gray)"><span class="hex">#e0e0e0</span></div><div class="swatch-info"><div class="name">Light Gray</div><div class="usage">Dividers</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:var(--blue)"><span class="hex">#6FC2FF</span></div><div class="swatch-info"><div class="name">Blue</div><div class="usage">CTAs, focus ring</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:var(--cyan)"><span class="hex">#4DD4D0</span></div><div class="swatch-info"><div class="name">Cyan</div><div class="usage">Accent, badges</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:var(--yellow)"><span class="hex">#FFD500</span></div><div class="swatch-info"><div class="name">Yellow</div><div class="usage">Tags, top banner</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:var(--coral)"><span class="hex">#FF6B6B</span></div><div class="swatch-info"><div class="name">Coral</div><div class="usage">Errors, delete</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:var(--orange-primary)"><span class="hex">#FF9500</span></div><div class="swatch-info"><div class="name">Orange</div><div class="usage">Logo primary</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:var(--orange-secondary)"><span class="hex">#FF6B00</span></div><div class="swatch-info"><div class="name">Orange Sec</div><div class="usage">Logo secondary</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:var(--pink)"><span class="hex">#FFB6C1</span></div><div class="swatch-info"><div class="name">Pink</div><div class="usage">Decorative</div></div></div>
+  </div>
+</section>
+<hr class="divider">
+
+<!-- ======== 2. TYPOGRAPHY ======== -->
+<section class="section">
+  <h2 class="section-header">Typography</h2>
+  <p class="section-sub">Inter (sans) &bull; Monaco / Courier New (mono)</p>
+  <div class="type-sample"><div class="label">Hero H1 &mdash; 96px→128px &bull; 700 &bull; -0.05em</div><div style="font-size:96px;font-weight:700;letter-spacing:-.05em;line-height:1">The quick brown fox</div></div>
+  <div class="type-sample"><div class="label">Section H2 &mdash; 48px→60px &bull; 700 &bull; -0.025em</div><div style="font-size:48px;font-weight:700;letter-spacing:-.025em">The quick brown fox</div></div>
+  <div class="type-sample"><div class="label">Card H3 &mdash; 36px→42px &bull; 700 &bull; -0.025em</div><div style="font-size:36px;font-weight:700;letter-spacing:-.025em">The quick brown fox</div></div>
+  <div class="type-sample"><div class="label">Body &mdash; 16px/400 or 18px→20px/500</div><div style="font-size:16px">The quick brown fox jumps over the lazy dog.</div></div>
+  <div class="type-sample"><div class="label">Button &mdash; 14px &bull; 700 &bull; UPPERCASE</div><div style="font-size:14px;font-weight:700;text-transform:uppercase">SUBMIT &bull; CANCEL &bull; GET STARTED</div></div>
+  <div class="type-sample"><div class="label">Label &mdash; 12px &bull; 700 &bull; 0.1em tracking &bull; UPPERCASE</div><div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em">EMAIL &bull; PASSWORD &bull; TAGS</div></div>
+  <div class="type-sample"><div class="label">Monospace &mdash; 13px &bull; Monaco</div><div style="font-family:var(--font-mono);font-size:13px">const query = `SELECT * FROM duckly.analytics LIMIT 100;`</div></div>
+</section>
+<hr class="divider">
+
+<!-- ======== 3. SPACING ======== -->
+<section class="section">
+  <h2 class="section-header">Spacing System</h2>
+  <p class="section-sub">4px base unit</p>
+  <div class="card" style="font-family:var(--font-mono);font-size:13px">
+    <table style="width:100%;border-collapse:collapse">
+      <tr><td style="padding:6px 12px;font-weight:700">--space-1</td><td style="padding:6px 12px">4px</td><td style="padding:6px 12px"><div style="width:4px;height:20px;background:var(--blue);border:2px solid var(--dark-gray)"></div></td></tr>
+      <tr><td style="padding:6px 12px;font-weight:700">--space-2</td><td style="padding:6px 12px">8px</td><td style="padding:6px 12px"><div style="width:8px;height:20px;background:var(--blue);border:2px solid var(--dark-gray)"></div></td></tr>
+      <tr><td style="padding:6px 12px;font-weight:700">--space-3</td><td style="padding:6px 12px">12px</td><td style="padding:6px 12px"><div style="width:12px;height:20px;background:var(--blue);border:2px solid var(--dark-gray)"></div></td></tr>
+      <tr><td style="padding:6px 12px;font-weight:700">--space-4</td><td style="padding:6px 12px">16px</td><td style="padding:6px 12px"><div style="width:16px;height:20px;background:var(--blue);border:2px solid var(--dark-gray)"></div></td></tr>
+      <tr><td style="padding:6px 12px;font-weight:700">--space-6</td><td style="padding:6px 12px">24px</td><td style="padding:6px 12px"><div style="width:24px;height:20px;background:var(--blue);border:2px solid var(--dark-gray)"></div></td></tr>
+      <tr><td style="padding:6px 12px;font-weight:700">--space-8</td><td style="padding:6px 12px">32px</td><td style="padding:6px 12px"><div style="width:32px;height:20px;background:var(--blue);border:2px solid var(--dark-gray)"></div></td></tr>
+      <tr><td style="padding:6px 12px;font-weight:700">--space-12</td><td style="padding:6px 12px">48px</td><td style="padding:6px 12px"><div style="width:48px;height:20px;background:var(--blue);border:2px solid var(--dark-gray)"></div></td></tr>
+      <tr><td style="padding:6px 12px;font-weight:700">--space-16</td><td style="padding:6px 12px">64px</td><td style="padding:6px 12px"><div style="width:64px;height:20px;background:var(--blue);border:2px solid var(--dark-gray)"></div></td></tr>
+      <tr><td style="padding:6px 12px;font-weight:700">--space-20</td><td style="padding:6px 12px">80px</td><td style="padding:6px 12px"><div style="width:80px;height:20px;background:var(--blue);border:2px solid var(--dark-gray)"></div></td></tr>
+    </table>
+  </div>
+</section>
+<hr class="divider">
+
+<!-- ======== 4. BORDER RADIUS ======== -->
+<section class="section">
+  <h2 class="section-header">Border Radius</h2>
+  <div class="grid-4">
+    <div style="text-align:center"><div style="width:72px;height:72px;background:var(--blue);border:2px solid var(--dark-gray);border-radius:var(--radius-none);margin:0 auto"></div><div style="font-family:var(--font-mono);font-size:12px;font-weight:700;margin-top:var(--space-2)">0px</div><div style="font-size:12px;color:var(--medium-gray)">--radius-none</div></div>
+    <div style="text-align:center"><div style="width:72px;height:72px;background:var(--blue);border:2px solid var(--dark-gray);border-radius:var(--radius-sm);margin:0 auto"></div><div style="font-family:var(--font-mono);font-size:12px;font-weight:700;margin-top:var(--space-2)">3px</div><div style="font-size:12px;color:var(--medium-gray)">--radius-sm</div></div>
+    <div style="text-align:center"><div style="width:72px;height:72px;background:var(--blue);border:2px solid var(--dark-gray);border-radius:var(--radius);margin:0 auto"></div><div style="font-family:var(--font-mono);font-size:12px;font-weight:700;margin-top:var(--space-2)">4px</div><div style="font-size:12px;color:var(--medium-gray)">--radius</div></div>
+    <div style="text-align:center"><div style="width:72px;height:72px;background:var(--blue);border:2px solid var(--dark-gray);border-radius:var(--radius-lg);margin:0 auto"></div><div style="font-family:var(--font-mono);font-size:12px;font-weight:700;margin-top:var(--space-2)">8px</div><div style="font-size:12px;color:var(--medium-gray)">--radius-lg</div></div>
+    <div style="text-align:center"><div style="width:72px;height:72px;background:var(--blue);border:2px solid var(--dark-gray);border-radius:var(--radius-full);margin:0 auto"></div><div style="font-family:var(--font-mono);font-size:12px;font-weight:700;margin-top:var(--space-2)">9999px</div><div style="font-size:12px;color:var(--medium-gray)">--radius-full</div></div>
+    <div style="text-align:center"><div style="width:72px;height:72px;background:var(--blue);border:2px solid var(--dark-gray);border-radius:50%;margin:0 auto"></div><div style="font-family:var(--font-mono);font-size:12px;font-weight:700;margin-top:var(--space-2)">50%</div><div style="font-size:12px;color:var(--medium-gray)">Window dots</div></div>
+  </div>
+</section>
+<hr class="divider">
+
+<!-- ======== 5. SHADOWS ======== -->
+<section class="section">
+  <h2 class="section-header">Shadows</h2>
+  <div class="grid-3">
+    <div class="card" style="text-align:center;box-shadow:var(--shadow-brutal)"><div style="font-size:14px;font-weight:700">Brutalist</div><div style="font-size:12px;color:var(--medium-gray);margin-top:var(--space-2)">4px 4px 0 #383838</div></div>
+    <div class="card" style="text-align:center;box-shadow:var(--shadow-brutal-active)"><div style="font-size:14px;font-weight:700">Brut. Active</div><div style="font-size:12px;color:var(--medium-gray);margin-top:var(--space-2)">2px 2px 0 #383838</div></div>
+    <div class="card" style="text-align:center;box-shadow:var(--shadow-lg)"><div style="font-size:14px;font-weight:700">Shadow LG</div><div style="font-size:12px;color:var(--medium-gray);margin-top:var(--space-2)">0 10px 15px -3px rgba(0,0,0,.1)</div></div>
+    <div class="card" style="text-align:center;box-shadow:var(--shadow-2xl)"><div style="font-size:14px;font-weight:700">Shadow 2XL</div><div style="font-size:12px;color:var(--medium-gray);margin-top:var(--space-2)">0 25px 50px -12px rgba(0,0,0,.25)</div></div>
+    <div class="card" style="text-align:center"><div style="font-size:14px;font-weight:700">No Shadow</div><div style="font-size:12px;color:var(--medium-gray);margin-top:var(--space-2)">Default state</div></div>
+    <div class="card" style="text-align:center;box-shadow:4px 4px 0 #383838,var(--shadow-lg)"><div style="font-size:14px;font-weight:700">Brutal + LG</div><div style="font-size:12px;color:var(--medium-gray);margin-top:var(--space-2)">Combined</div></div>
+  </div>
+</section>
+<hr class="divider">
+
+<!-- ======== 6. COMPONENTS ======== -->
+<section class="section">
+  <h2 class="section-header">Components</h2>
+
+  <!-- 6a. Buttons -->
+  <div class="card" style="margin-bottom:var(--space-8)">
+    <h3 style="font-size:24px;font-weight:700;margin-bottom:var(--space-6)">Buttons</h3>
+    <div style="margin-bottom:var(--space-4)">
+      <div class="form-label">Sizes</div>
+      <div class="btn-group">
+        <span class="btn btn-primary" style="padding:var(--space-4) var(--space-8)">Large</span>
+        <span class="btn btn-primary btn-medium">Medium</span>
+        <span class="btn btn-primary btn-small">Small</span>
+      </div>
+    </div>
+    <div style="margin-bottom:var(--space-4)">
+      <div class="form-label">Variants</div>
+      <div class="btn-group">
+        <span class="btn btn-primary btn-medium">Primary</span>
+        <span class="btn btn-medium">Secondary</span>
+        <span class="btn btn-medium" style="background:var(--dark-gray);color:var(--white)">Dark</span>
+        <span class="btn btn-medium" style="background:var(--coral)">Danger</span>
+      </div>
+    </div>
+    <div>
+      <div class="form-label">Interactive States</div>
+      <div class="btn-group">
+        <span class="btn btn-primary btn-medium" style="transform:translate(-1px,-1px)">Hover</span>
+        <span class="btn btn-primary btn-medium" style="translate:-2px -2px;box-shadow:var(--shadow-brutal)">Active</span>
+        <span class="btn btn-primary btn-medium" style="opacity:.7">Pressed</span>
+        <span class="btn btn-medium" style="opacity:.4">Disabled</span>
+      </div>
+      <div style="margin-top:var(--space-3);font-family:var(--font-mono);font-size:12px;color:var(--medium-gray);background:var(--bg-beige);padding:var(--space-3);border:2px solid var(--light-gray)">
+        <strong>Hover:</strong> translate(-1px,-1px) &bull; transition: transform var(--t)<br>
+        Tailwind: <code>hover:-translate-y-px hover:-translate-x-px transition-transform</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6b–f compact grid -->
+  <div class="grid-2" style="margin-bottom:var(--space-8)">
+    <div class="card">
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:var(--space-4)">Form Input</h3>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" placeholder="you@example.com"></div>
+      <div class="form-group"><label class="form-label">Focused</label><input class="form-input" type="text" placeholder="Type..." style="box-shadow:0 0 0 2px var(--blue)"></div>
+      <div class="form-group" style="margin-bottom:0"><label class="form-label">Filled</label><input class="form-input" type="text" value="hello@duckly.com"></div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:var(--space-4)">Checkbox</h3>
+      <div class="checkbox-group"><span class="checkbox-custom"></span><span class="checkbox-label">Unchecked</span></div>
+      <div class="checkbox-group"><span class="checkbox-custom checked"><span class="checkmark"></span></span><span class="checkbox-label">Checked</span></div>
+      <div style="margin-top:var(--space-4);padding-top:var(--space-4);border-top:2px solid var(--light-gray);font-family:var(--font-mono);font-size:12px;color:var(--medium-gray)">
+        18×18px &bull; border 2px #383838 &bull; radius 3px &bull; checked: bg #383838 + white checkmark
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:var(--space-8)">
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:var(--space-4)">Tags &amp; Badges</h3>
+    <div style="display:flex;gap:var(--space-6);flex-wrap:wrap">
+      <div><div class="form-label">Tags (radius 4px)</div><div class="tag-group"><span class="tag tag-yellow">Feature</span><span class="tag" style="background:var(--blue);border-radius:var(--radius)">Blue</span><span class="tag" style="background:var(--coral);border-radius:var(--radius)">Urgent</span></div></div>
+      <div><div class="form-label">Badges (pill)</div><div class="tag-group"><span class="tag tag-cyan">Active</span><span class="tag" style="background:var(--yellow);border-radius:var(--radius-full)">Yellow</span><span class="tag" style="background:var(--dark-gray);color:var(--white);border-radius:var(--radius-full)">Dark</span></div></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:var(--space-8)">
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:var(--space-4)">Code Window</h3>
+    <div class="code-window">
+      <div class="code-window-header"><span class="window-dot red"></span><span class="window-dot yellow"></span><span class="window-dot green"></span></div>
+      <div class="code-window-body">
+        <span class="sql-comment">-- Analyze recent page views</span><br>
+        <span class="sql-keyword">WITH</span> page_metrics <span class="sql-keyword">AS</span> (<br>
+        &nbsp;&nbsp;<span class="sql-keyword">SELECT</span> date, <span class="sql-function">COUNT</span>(*) <span class="sql-keyword">AS</span> total_views<br>
+        &nbsp;&nbsp;<span class="sql-keyword">FROM</span> duckly.analytics.events<br>
+        &nbsp;&nbsp;<span class="sql-keyword">WHERE</span> event = <span class="sql-string">'page_view'</span><br>
+        )<br>
+        <span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> page_metrics <span class="sql-keyword">ORDER BY</span> date <span class="sql-keyword">DESC</span>;
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:var(--space-8)">
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:var(--space-4)">Card Patterns</h3>
+    <div class="grid-3" style="margin-bottom:var(--space-4)">
+      <div class="feature-card"><div class="icon-placeholder">M</div><h3>Duckly</h3><p>Build beautiful Eisenhower matrices with drag-and-drop simplicity.</p></div>
+      <div class="feature-card"><div class="icon-placeholder" style="background:var(--cyan)">D</div><h3>Drag &amp; Drop</h3><p>Organize your tasks with intuitive drag-and-drop.</p></div>
+      <div class="feature-card"><div class="icon-placeholder" style="background:var(--yellow)">A</div><h3>Analytics</h3><p>Get insights into your productivity patterns.</p></div>
+    </div>
+    <div class="grid-2">
+      <div class="testimonial-card"><blockquote>"The best matrix app I've ever used."</blockquote><div class="attribution">&mdash; Alex Chen</div></div>
+      <div class="testimonial-card"><blockquote>"I organize my week in under 5 minutes."</blockquote><div class="attribution">&mdash; Sarah Kim</div></div>
+    </div>
+  </div>
+
+  <!-- 6g. Task Items (1 quadrant, variants noted) -->
+  <div class="card" style="margin-bottom:var(--space-8)">
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:var(--space-4)">Task / Todo Items</h3>
+    <div class="quadrant-card" style="max-width:600px">
+      <div class="quadrant-header">
+        <div style="flex:1;min-width:0">
+          <div class="quadrant-title-row"><span class="quadrant-dot coral"></span><h4 class="quadrant-title">DO FIRST</h4></div>
+          <p class="quadrant-subtitle">Urgent &amp; Important</p>
+        </div>
+        <span class="quadrant-add-btn coral">+ Add</span>
+      </div>
+      <div class="drop-zone">
+        <div class="task-item">
+          <input type="checkbox" class="task-checkbox">
+          <p class="task-text">Fix critical production bug</p>
+          <div class="task-actions"><button class="task-btn-edit">✎</button><button class="task-btn-delete">×</button></div>
+        </div>
+        <div class="task-item">
+          <input type="checkbox" class="task-checkbox" checked>
+          <p class="task-text" style="text-decoration:line-through;opacity:.6">Completed task</p>
+          <div class="task-actions"><button class="task-btn-edit">✎</button><button class="task-btn-delete">×</button></div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:var(--space-4);font-family:var(--font-mono);font-size:12px;line-height:1.8;color:var(--medium-gray);background:var(--bg-beige);padding:var(--space-3);border:2px solid var(--light-gray)">
+      <strong>4 color variants (dot + +Add bg):</strong> Do First=#FF6B6B &bull; Schedule=#6FC2FF &bull; Delegate=#FFD500 &bull; Eliminate=#4DD4D0<br>
+      <strong>Task item:</strong> flex gap:12px &bull; padding:16px &bull; cursor:move &bull; hover:bg:#f9f9f9<br>
+      <strong>Checkbox:</strong> 20×20px &bull; border 2px #383838 &bull; radius 3px &bull; appearance:none &bull; checked:bg #383838<br>
+      <strong>✎ edit:</strong> #383838 → hover blue &bull; <strong>× delete:</strong> #FF6B6B → hover #dc2626<br>
+      <strong>+Add hover:</strong> translate(-2px,-2px) &bull; transition: all var(--t)
+    </div>
+  </div>
+
+  <!-- 6h. Dropdown -->
+  <div class="card" style="margin-bottom:var(--space-8)">
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:var(--space-4)">Dropdown / Locale Switcher</h3>
+    <div style="display:flex;gap:var(--space-8);align-items:flex-start;flex-wrap:wrap">
+      <div><div class="form-label">Closed</div><span class="dropdown-toggle"><span>ENGLISH</span><span class="dropdown-arrow">▼</span></span></div>
+      <div>
+        <div class="form-label">Open</div>
+        <div style="position:relative">
+          <span class="dropdown-toggle"><span>ENGLISH</span><span class="dropdown-arrow">▼</span></span>
+          <div class="dropdown-menu" style="position:static;margin-top:4px">
+            <button class="dropdown-item active">English</button>
+            <button class="dropdown-item">繁體中文</button>
+            <button class="dropdown-item">简体中文</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:var(--space-4);font-family:var(--font-mono);font-size:12px;color:var(--medium-gray);background:var(--bg-beige);padding:var(--space-3);border:2px solid var(--light-gray)">
+      <strong>Toggle:</strong> flex gap:4px &bull; padding:6px 12px &bull; 14px/600 uppercase &bull; hover:translate(-1px,-1px)<br>
+      <strong>Menu:</strong> absolute right:0 &bull; 140px &bull; bg white &bull; border 2px #383838 &bull; box-shadow: 0 4px 6px -1px rgba(0,0,0,.1)<br>
+      <strong>Item:</strong> hover:bg #FFD500 &bull; <strong>.active:</strong> bg #383838, text white, font-weight 700
+    </div>
+  </div>
+
+  <!-- 6i. Task Statistics Modal -->
+  <div class="card">
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:var(--space-4)">Task Statistics Modal</h3>
+    <div class="modal-overlay" style="position:static;background:var(--bg-beige);padding:0;z-index:auto;overflow:visible">
+      <div class="modal-content" style="margin:0;max-height:none">
+        <div class="modal-header" style="position:static"><h4 class="modal-title">Task Statistics</h4><button class="modal-close">×</button></div>
+        <div class="modal-body">
+          <div class="tab-bar"><span class="tab-btn active">📊 Chart</span><span class="tab-btn">📋 List</span></div>
+          <div class="stats-summary-grid">
+            <div class="stat-card"><div class="stat-value dark">4</div><div class="stat-label">Total Tasks</div></div>
+            <div class="stat-card"><div class="stat-value cyan">0</div><div class="stat-label">Completed</div></div>
+            <div class="stat-card"><div class="stat-value yellow">4</div><div class="stat-label">Pending</div></div>
+            <div class="stat-card"><div class="stat-value blue">0%</div><div class="stat-label">Rate</div></div>
+          </div>
+          <div class="stats-charts-grid">
+            <div><h5 class="stats-section-title">Tasks by Quadrant</h5><div class="stats-chart-placeholder" style="min-height:160px"><span class="icon">📊</span><span class="desc">Bar chart</span></div></div>
+            <div><h5 class="stats-section-title">Completion Status</h5><div class="stats-chart-placeholder" style="min-height:160px"><span class="icon">🥧</span><span class="desc">Pie chart</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:var(--space-4);font-family:var(--font-mono);font-size:12px;color:var(--medium-gray);background:var(--bg-beige);padding:var(--space-3);border:2px solid var(--light-gray)">
+      <strong>Overlay:</strong> fixed inset-0 &bull; rgba(56,56,56,.5) &bull; z-50<br>
+      <strong>Content:</strong> white &bull; border 2px #383838 &bull; max-w 1152px &bull; max-h 90vh<br>
+      <strong>Header:</strong> sticky top-0 &bull; flex space-between &bull; border-bottom 2px #383838 &bull; z-10<br>
+      <strong>Stat card:</strong> bg #F4EFEA &bull; border 2px #383838 &bull; 36px/700 value &bull; colors: Total=#383838, Completed=#4DD4D0, Pending=#FFD500, Rate=#6FC2FF
+    </div>
+  </div>
+</section>
+<hr class="divider">
+
+<!-- ======== 7. TRANSITIONS ======== -->
+<section class="section">
+  <h2 class="section-header">Transitions</h2>
+  <p class="section-sub">All motion: 150ms &bull; cubic-bezier(0.4,0,0.2,1) (= Tailwind <code>ease-out</code>) &bull; No @keyframes</p>
+  <div class="card">
+    <div style="overflow-x:auto">
+      <table style="width:100%;font-family:var(--font-mono);font-size:12px;border-collapse:collapse">
+        <thead><tr style="background:var(--dark-gray);color:var(--white)"><th style="padding:8px 12px;text-align:left">Element</th><th style="padding:8px 12px;text-align:left">Hover Effect</th><th style="padding:8px 12px;text-align:left">CSS Property</th></tr></thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--light-gray)"><td style="padding:8px 12px">Header buttons, Locale toggle</td><td style="padding:8px 12px">translate(-1px,-1px)</td><td style="padding:8px 12px">transform</td></tr>
+          <tr style="border-bottom:1px solid var(--light-gray)"><td style="padding:8px 12px">+Add buttons</td><td style="padding:8px 12px">translate(-2px,-2px)</td><td style="padding:8px 12px">all</td></tr>
+          <tr style="border-bottom:1px solid var(--light-gray)"><td style="padding:8px 12px">✎ Edit btn</td><td style="padding:8px 12px">color: #6FC2FF</td><td style="padding:8px 12px">color</td></tr>
+          <tr style="border-bottom:1px solid var(--light-gray)"><td style="padding:8px 12px">× Delete btn</td><td style="padding:8px 12px">color: #dc2626</td><td style="padding:8px 12px">color</td></tr>
+          <tr style="border-bottom:1px solid var(--light-gray)"><td style="padding:8px 12px">Task item</td><td style="padding:8px 12px">bg: #f9f9f9</td><td style="padding:8px 12px">background</td></tr>
+          <tr style="border-bottom:1px solid var(--light-gray)"><td style="padding:8px 12px">Dropdown item</td><td style="padding:8px 12px">bg: #FFD500</td><td style="padding:8px 12px">all</td></tr>
+          <tr><td style="padding:8px 12px">Drop zone, Footer link</td><td style="padding:8px 12px">bg / opacity .7</td><td style="padding:8px 12px">background / opacity</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<hr class="divider">
+
+<!-- ======== 8. PAGE LAYOUT ======== -->
+<section class="section">
+  <h2 class="section-header">Page Layout &amp; Responsive</h2>
+  <p class="section-sub">Breakpoints: sm(640px), lg(1024px) &bull; No md(768px) or 2xl(1536px) used</p>
+  <div class="grid-2">
+    <div class="card">
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:var(--space-4)">Page Structure</h3>
+      <div style="font-family:var(--font-mono);font-size:12px;line-height:2">
+        <strong style="display:inline-block;width:110px">HEADER</strong> Yellow banner (#FFD500) border-bottom 2px #383838<br>
+        <strong style="display:inline-block;width:110px">MAIN</strong> max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-12<br>
+        <strong style="display:inline-block;width:110px">&nbsp;&nbsp;Quadrants</strong> grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6<br>
+        <strong style="display:inline-block;width:110px">&nbsp;&nbsp;Count bar</strong> grid-cols-2 lg:grid-cols-4 mt-6 sm:mt-12<br>
+        <strong style="display:inline-block;width:110px">FOOTER</strong> White, border-top 2px #383838, mt-8 sm:mt-16<br><br>
+        <strong>Quadrant card:</strong> bg white, border 2px #383838, rounded, p-4 sm:p-6<br>
+        <strong>Card header:</strong> flex items-center justify-between, mb-4 sm:mb-6
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:var(--space-4)">Cursor &amp; Drag</h3>
+      <div style="font-family:var(--font-mono);font-size:12px;line-height:2">
+        <strong style="display:inline-block;width:75px">default</strong> Buttons, +Add, dropdown items, tabs<br>
+        <strong style="display:inline-block;width:75px">pointer</strong> Checkbox, ✎/×, footer link<br>
+        <strong style="display:inline-block;width:75px">move</strong> Task items (sortable)<br><br>
+        <strong>Drop zone:</strong> min-h:100px &bull; overflow-y:auto<br>
+        <strong>Drag a11y:</strong> role=button &bull; aria-roledescription=sortable<br>
+        &nbsp;&nbsp;Space pick/drop &bull; Arrow keys move
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer style="text-align:center;padding:var(--space-8) 0;margin-top:var(--space-8);border-top:2px solid var(--light-gray)">
+  <p style="font-size:12px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--medium-gray)">Duckly Design System &mdash; Brutalist design tokens</p>
+</footer>
+
+</div>
+</body>
+</html>

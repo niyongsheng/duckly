@@ -1,7 +1,8 @@
+import { useI18n } from "../i18n/config";
 import { useTaskStore } from "../stores/useTaskStore";
 
 export default function StatsBar() {
-  // Use state that updates reactively
+  const { t } = useI18n();
   const tasks = useTaskStore((s) => s.tasks);
   const total = tasks.length;
   const done = tasks.filter((t) => t.status === "done").length;
@@ -12,19 +13,19 @@ export default function StatsBar() {
     <section className="stats-summary-grid">
       <div className="stat-card">
         <div className="stat-value dark">{total}</div>
-        <div className="stat-label">全部任务</div>
+        <div className="stat-label">{t("task.total")}</div>
       </div>
       <div className="stat-card">
         <div className="stat-value cyan">{done}</div>
-        <div className="stat-label">已完成</div>
+        <div className="stat-label">{t("task.completed")}</div>
       </div>
       <div className="stat-card">
         <div className="stat-value yellow">{pending}</div>
-        <div className="stat-label">待处理</div>
+        <div className="stat-label">{t("task.pending")}</div>
       </div>
       <div className="stat-card">
         <div className="stat-value blue">{completionRate}%</div>
-        <div className="stat-label">完成率</div>
+        <div className="stat-label">{t("task.rate")}</div>
       </div>
     </section>
   );

@@ -59,14 +59,6 @@ function getWeekStart(date: Date): Date {
   return d;
 }
 
-// ── Multi-day event helpers ──
-function isDateBetween(target: Date, startKey: string, endKey: string): boolean {
-  const s = new Date(startKey);
-  const e = new Date(endKey);
-  e.setHours(23, 59, 59, 999);
-  return target >= s && target <= e;
-}
-
 function priorityToEventColor(priority: string): MultiDayEvent["color"] {
   switch (priority) {
     case "urgent-important":
@@ -631,20 +623,20 @@ export default function CalendarView() {
                     className={`day-hour-cell${h === today.getHours() ? " current" : ""}`}
                   >
                     {h === 6 &&
-                      selectedTasks.slice(0, 2).map((t) => (
+                      selectedTasks.slice(0, 2).map((task) => (
                         <div
-                          key={t.id}
-                          className={`day-task-block ${getPriorityColor(t)}${t.status === "done" ? " done" : ""}`}
+                          key={task.id}
+                          className={`day-task-block ${getPriorityColor(task)}${task.status === "done" ? " done" : ""}`}
                         >
                           <span className="dt-time">全天</span>
-                          <span className="dt-text">{t.title}</span>
+                          <span className="dt-text">{task.title}</span>
                           <span
                             className="dt-tag"
                             style={{
-                              background: `var(--${getPriorityColor(t) === "coral" ? "coral" : getPriorityColor(t) === "blue" ? "blue" : getPriorityColor(t) === "yellow" ? "yellow" : "cyan"})`,
+                              background: `var(--${getPriorityColor(task) === "coral" ? "coral" : getPriorityColor(task) === "blue" ? "blue" : getPriorityColor(task) === "yellow" ? "yellow" : "cyan"})`,
                             }}
                           >
-                            {{ coral: t("priority.urgent"), blue: t("priority.important"), yellow: t("priority.inProgress"), cyan: t("priority.daily") }[getPriorityColor(t)]}
+                            {{ coral: t("priority.urgent"), blue: t("priority.important"), yellow: t("priority.inProgress"), cyan: t("priority.daily") }[getPriorityColor(task)]}
                           </span>
                         </div>
                       ))}
@@ -783,17 +775,17 @@ function CalendarSidebar({
             暂无任务安排
           </div>
         ) : (
-          selectedTasks.map((t) => {
-            const color = getPriorityColorClass(t.priority);
+          selectedTasks.map((task) => {
+            const color = getPriorityColorClass(task.priority);
             return (
               <div
-                key={t.id}
+                key={task.id}
                 className="cal-sidebar-task-item"
-                style={{ opacity: t.status === "done" ? 0.6 : 1 }}
+                style={{ opacity: task.status === "done" ? 0.6 : 1 }}
               >
                 <span className="cal-sidebar-time">
-                  {t.dueDate
-                    ? new Date(t.dueDate).toLocaleTimeString("zh-CN", {
+                  {task.dueDate
+                    ? new Date(task.dueDate).toLocaleTimeString("zh-CN", {
                         hour: "2-digit",
                         minute: "2-digit",
                       })
@@ -802,9 +794,9 @@ function CalendarSidebar({
                 <div className="cal-sidebar-task-info">
                   <div
                     className="cal-sidebar-task-title"
-                    style={{ textDecoration: t.status === "done" ? "line-through" : "none" }}
+                    style={{ textDecoration: task.status === "done" ? "line-through" : "none" }}
                   >
-                    {t.title}
+                    {task.title}
                   </div>
                   <span
                     className="cal-sidebar-task-tag"

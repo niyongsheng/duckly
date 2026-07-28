@@ -288,7 +288,7 @@ body {
   background: var(--bg-card);
   border: var(--border-default);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  z-index: 20;
+  z-index: 30;
   display: none;
 }
 
@@ -324,7 +324,7 @@ body {
   border: var(--border-default);
   padding: var(--space-4);
   background: var(--bg-card);
-  cursor: move;
+  cursor: grab;
   transition: background-color 0.15s;
 }
 
@@ -508,8 +508,19 @@ body {
 
 .drop-zone.drag-over {
   background: var(--bg-hover);
-  outline: 2px dashed var(--blue);
-  outline-offset: -2px;
+}
+
+/* ── Drag Overlay ── */
+.task-overlay-card {
+  width: 240px;
+  padding: var(--space-4);
+  background: var(--bg-card);
+  border: var(--border-default);
+  box-shadow: var(--shadow-brutal);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
 }
 
 /* ── Tags ── */
@@ -2051,6 +2062,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* ── Notification Backdrop ── */
+.notif-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 29;
+  background: transparent;
 }
 
 .notif-panel {

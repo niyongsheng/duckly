@@ -52,6 +52,13 @@ export const REPEAT_OPTIONS = [
   { value: "monthly", label: "Monthly" },
 ] as const;
 
+export const PRIORITY_BG_COLORS: Record<Priority, string> = {
+  "urgent-important": "var(--coral)",
+  "not-urgent-important": "var(--blue)",
+  "urgent-not-important": "var(--yellow)",
+  "not-urgent-not-important": "var(--cyan)",
+};
+
 export const TAG_COLORS = [
   "#FF8A80",
   "#FFE082",

@@ -2,30 +2,19 @@ import type { Task } from "../db/schema";
 import { useTaskStore } from "../stores/useTaskStore";
 import { useUIStore } from "../stores/useUIStore";
 import { useI18n } from "../i18n/config";
+import { PRIORITY_BG_COLORS } from "../constants";
 
 interface TaskCardProps {
   task: Task;
-  onDragStart?: (e: React.DragEvent, taskId: string) => void;
 }
 
-const PRIORITY_BG_COLORS: Record<string, string> = {
-  "urgent-important": "var(--coral)",
-  "not-urgent-important": "var(--blue)",
-  "urgent-not-important": "var(--yellow)",
-  "not-urgent-not-important": "var(--cyan)",
-};
-
-export default function TaskCard({ task, onDragStart }: TaskCardProps) {
+export default function TaskCard({ task }: TaskCardProps) {
   const { t } = useI18n();
   const { toggleTask, deleteTask } = useTaskStore();
   const { openTaskForm } = useUIStore();
 
   return (
-    <div
-      className="task-item"
-      draggable
-      onDragStart={(e: React.DragEvent<HTMLDivElement>) => onDragStart?.(e, task.id)}
-    >
+    <div className="task-item">
       <input
         type="checkbox"
         className="task-checkbox"

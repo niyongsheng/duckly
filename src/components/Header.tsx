@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useI18n } from "../i18n/config";
 import { useUIStore } from "../stores/useUIStore";
 import NotificationPanel from "./NotificationPanel";
@@ -5,12 +6,14 @@ import DuckLogo from "./DuckLogo";
 
 export default function Header() {
   const { t, locale, setLocale } = useI18n();
+  const [showLangMenu, setShowLangMenu] = useState(false);
   const {
     viewMode,
     setViewMode,
     openTaskForm,
     toggleSettings,
     toggleNotifications,
+    closeNotifications,
     showNotifications,
   } = useUIStore();
 
@@ -164,7 +167,15 @@ export default function Header() {
               </svg>
               <span className="notif-badge">3</span>
             </button>
-            {showNotifications && <NotificationPanel />}
+            {showNotifications && (
+              <>
+                <div
+                  className="notif-backdrop"
+                  onClick={closeNotifications}
+                />
+                <NotificationPanel />
+              </>
+            )}
           </div>
 
           {/* Language switcher */}
@@ -173,10 +184,7 @@ export default function Header() {
               className="dropdown-toggle"
               onClick={(e) => {
                 e.stopPropagation();
-                const menu = e.currentTarget.nextElementSibling;
-                if (menu instanceof HTMLElement) {
-                  menu.style.display = menu.style.display === "block" ? "none" : "block";
-                }
+                setShowLangMenu((v) => !v);
               }}
             >
               <svg className="icon icon-16" viewBox="0 0 24 24" fill="none">
@@ -204,20 +212,28 @@ export default function Header() {
                 />
               </svg>
             </button>
-            <div className="dropdown-menu">
-              <button
-                className={`dropdown-item ${locale === "zh" ? "active" : ""}`}
-                onClick={(e) => { setLocale("zh"); (e.currentTarget.closest('.dropdown-menu') as HTMLElement).style.display = 'none'; }}
-              >
-                简体中文
-              </button>
-              <button
-                className={`dropdown-item ${locale === "en" ? "active" : ""}`}
-                onClick={(e) => { setLocale("en"); (e.currentTarget.closest('.dropdown-menu') as HTMLElement).style.display = 'none'; }}
-              >
-                English
-              </button>
-            </div>
+            {showLangMenu && (
+              <>
+                <div
+                  className="notif-backdrop"
+                  onClick={() => setShowLangMenu(false)}
+                />
+                <div className="dropdown-menu" style={{ display: "block" }}>
+                  <button
+                    className={`dropdown-item ${locale === "zh" ? "active" : ""}`}
+                    onClick={() => { setLocale("zh"); setShowLangMenu(false); }}
+                  >
+                    简体中文
+                  </button>
+                  <button
+                    className={`dropdown-item ${locale === "en" ? "active" : ""}`}
+                    onClick={() => { setLocale("en"); setShowLangMenu(false); }}
+                  >
+                    English
+                  </button>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Settings button */}

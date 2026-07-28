@@ -49,12 +49,22 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   },
 
   updateTask: async (id: string, data: TaskUpdate) => {
-    const db = await initDatabase();
-    const updated = await db.updateTask(id, data);
-    if (updated) {
-      set((state) => ({
-        tasks: state.tasks.map((t) => (t.id === id ? updated : t)),
-      }));
+    // Snapshot previous state for rollback
+    const prevTasks = get().tasks;
+    // Optimistic update: apply immediately in local state
+    set((state) => ({
+      tasks: state.tasks.map((t) =>
+        t.id === id ? { ...t, ...data, updatedAt: new Date().toISOString() } : t,
+      ),
+    }));
+    // Sync to database in background
+    try {
+      const db = await initDatabase();
+      await db.updateTask(id, data);
+    } catch (err) {
+      console.error("Failed to sync update to DB:", err);
+      // Rollback local state on failure
+      set({ tasks: prevTasks });
     }
   },
 
@@ -65,21 +75,10 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   },
 
   toggleTask: async (id: string) => {
-    // Optimistic update: toggle instantly in local state
-    set((state) => ({
-      tasks: state.tasks.map((t) =>
-        t.id === id
-          ? { ...t, status: t.status === "done" ? "todo" : "done" }
-          : t,
-      ),
-    }));
-    // Sync to database in background
-    try {
-      const db = await initDatabase();
-      await db.toggleTaskStatus(id);
-    } catch (err) {
-      console.error("Failed to sync toggle to DB:", err);
-    }
+    const task = get().tasks.find((t) => t.id === id);
+    if (!task) return;
+    const newStatus: Task["status"] = task.status === "done" ? "todo" : "done";
+    await get().updateTask(id, { status: newStatus });
   },
 
   getTasksByPriority: (priority: string) => {

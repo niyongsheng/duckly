@@ -26,7 +26,6 @@ export async function runMigrations(exec: (sql: string) => Promise<void>): Promi
   await exec(MIGRATIONS_TABLE_SQL);
 
   // Check current version
-  let currentVersion = 0;
   try {
     // Use a temporary table to capture the version query result
     await exec(

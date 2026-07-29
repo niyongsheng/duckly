@@ -3,12 +3,10 @@ import { initDatabase } from "../db/database";
 import type { Tag } from "../db/schema";
 
 const DEFAULT_TAGS: Array<{ name: string; color: string }> = [
-  { name: "💻 技术开发", color: "var(--blue)" },
-  { name: "⚡ 紧急业务", color: "var(--coral)" },
-  { name: "🌱 个人成长", color: "var(--yellow)" },
-  { name: "📋 日常事务", color: "var(--cyan)" },
-  { name: "📦 产品需求", color: "var(--orange-primary)" },
-  { name: "📅 会议", color: "var(--pink)" },
+  { name: "技术开发", color: "var(--blue)" },
+  { name: "紧急业务", color: "var(--coral)" },
+  { name: "个人成长", color: "var(--yellow)" },
+  { name: "日常事务", color: "var(--cyan)" },
 ];
 
 interface TagState {
@@ -34,6 +32,25 @@ function saveFallback(tags: Tag[]) {
   } catch { /* ignore */ }
 }
 
+/** Strip leading emoji + optional space from tag names (migration from old defaults) */
+function stripEmoji(name: string): string {
+  return name.replace(/^[\p{Emoji}️]‍?[\p{Emoji}️]?\s*/u, "");
+}
+
+/** Old default tag names (with and without emoji) that should be cleaned up */
+function getOldDefaultNames(): Set<string> {
+  return new Set([
+    "💻 技术开发", "⚡ 紧急业务", "🌱 个人成长", "📋 日常事务",
+    "📦 产品需求", "📅 会议",
+    "技术开发", "紧急业务", "个人成长", "日常事务",
+    "产品需求", "会议",
+  ]);
+}
+
+function getNewDefaultNames(): Set<string> {
+  return new Set(DEFAULT_TAGS.map((t) => t.name));
+}
+
 let tagIdCounter = Date.now();
 
 function makeFallbackTag(name: string, color: string): Tag {
@@ -52,6 +69,9 @@ export const useTagStore = create<TagState>((set, get) => ({
   loadTags: async () => {
     if (get().tags.length > 0 && !get().loading) return;
     set({ loading: true });
+
+    const oldDefaults = getOldDefaultNames();
+    const newDefaultNames = getNewDefaultNames();
 
     try {
       const db = await initDatabase();
@@ -72,7 +92,32 @@ export const useTagStore = create<TagState>((set, get) => ({
           return;
         }
       } else {
-        set({ tags, loading: false });
+        // Strip old emoji prefixes and remove deprecated default tags
+        const cleaned = tags.map((t) => ({ ...t, name: stripEmoji(t.name) }));
+        const toDelete = cleaned.filter(
+          (t) => oldDefaults.has(t.name) && !newDefaultNames.has(t.name),
+        );
+        const kept = cleaned.filter(
+          (t) => !oldDefaults.has(t.name) || newDefaultNames.has(t.name),
+        );
+
+        for (const t of cleaned) {
+          const orig = tags.find((ot) => ot.id === t.id);
+          if (orig && t.name !== orig.name) {
+            try {
+              await db.exec(
+                `UPDATE tags SET name = '${t.name.replace(/'/g, "''")}' WHERE id = '${t.id}'`,
+              );
+            } catch { /* ignore */ }
+          }
+        }
+        for (const t of toDelete) {
+          try {
+            await db.exec(`DELETE FROM tags WHERE id = '${t.id}'`);
+          } catch { /* ignore */ }
+        }
+
+        set({ tags: kept, loading: false });
         return;
       }
     } catch (e) {
@@ -80,11 +125,14 @@ export const useTagStore = create<TagState>((set, get) => ({
     }
 
     // Fallback: use localStorage
-    let fallback = loadFallback();
+    let fallback = loadFallback().map((t) => ({ ...t, name: stripEmoji(t.name) }));
+    fallback = fallback.filter(
+      (t) => !oldDefaults.has(t.name) || newDefaultNames.has(t.name),
+    );
     if (fallback.length === 0) {
       fallback = DEFAULT_TAGS.map((p) => makeFallbackTag(p.name, p.color));
-      saveFallback(fallback);
     }
+    saveFallback(fallback);
     set({ tags: fallback, loading: false });
   },
 

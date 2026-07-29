@@ -118,6 +118,7 @@ export default function SettingsDrawer() {
               <div style={{ width: "100%", marginTop: 8, paddingLeft: 44 }}>
                 <input
                   className="form-input"
+                  name="webhookUrl"
                   placeholder="https://hooks.example.com/notify"
                   value={settings.webhookUrl}
                   onChange={(e) => setWebhookUrl(e.target.value)}
@@ -134,7 +135,7 @@ export default function SettingsDrawer() {
                       className={`webhook-event-item ${settings.webhookEvents[event] ? "active" : ""}`}
                       onClick={() => toggleWebhookEvent(event)}
                     >
-                      <input type="checkbox" checked={settings.webhookEvents[event]} readOnly />
+                      <input type="checkbox" name={"webhook-" + event} checked={settings.webhookEvents[event]} readOnly />
                       {t("webhook.event" + event.charAt(0).toUpperCase() + event.slice(1))}
                     </div>
                   ))}
@@ -144,9 +145,13 @@ export default function SettingsDrawer() {
                     className="btn btn-small btn-primary"
                     onClick={() => {
                       if (settings.webhookUrl && settings.webhookUrl.startsWith("http")) {
-                        showToast(t("settings.webhookSaved"), "success");
+                        const events = Object.entries(settings.webhookEvents)
+                          .filter(([, v]) => v)
+                          .map(([k]) => t("webhook.event" + k.charAt(0).toUpperCase() + k.slice(1)))
+                          .join(", ");
+                        showToast(`${t("settings.webhookSaved")} · ${events}`, "success");
                       } else {
-                        showToast("Invalid URL", "error");
+                        showToast("请填写有效的 Webhook URL（以 http 开头）", "error");
                       }
                     }}
                   >

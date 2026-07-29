@@ -78,6 +78,7 @@ export default function TagManagement() {
       <div style={{ display: "flex", gap: "var(--space-3)" }}>
         <input
           className="form-input"
+          name="newTagName"
           placeholder={t("tag.placeholder")}
           style={{ flex: 1 }}
           value={newTagName}

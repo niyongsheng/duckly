@@ -6,6 +6,7 @@ import { useExcel } from "../hooks/useExcel";
 import { useUIStore } from "../stores/useUIStore";
 import { useTaskStore } from "../stores/useTaskStore";
 import { useNotificationStore } from "../stores/useNotificationStore";
+import { useConfirm } from "../hooks/useConfirm";
 import type { WebhookEvent, NotifToggle } from "../stores/useNotificationStore";
 
 export default function SettingsDrawer() {
@@ -21,9 +22,11 @@ export default function SettingsDrawer() {
     setToggle,
     testWebhook,
     deleteWebhook,
+    clearAll: clearAllNotifications,
   } = useNotificationStore();
   const { canInstall, installApp } = usePWA();
   const importInputRef = useRef<HTMLInputElement>(null);
+  const [confirm, ConfirmDialog] = useConfirm();
 
   // Sync dark mode with document
   useEffect(() => {
@@ -52,6 +55,7 @@ export default function SettingsDrawer() {
 
   return (
     <>
+      <ConfirmDialog />
       {/* Overlay */}
       <div className={`drawer-overlay ${showSettings ? "open" : ""}`} onClick={closeSettings} />
 
@@ -262,9 +266,15 @@ export default function SettingsDrawer() {
             </div>
             <div
               className="drawer-item"
-              onClick={() => {
-                if (confirm(t("task.confirmDeleteAll").replace("{count}", String(useTaskStore.getState().tasks.length)))) {
+              onClick={async () => {
+                const count = useTaskStore.getState().tasks.length;
+                const ok = await confirm({
+                  message: t("task.confirmDeleteAll").replace("{count}", String(count)),
+                  variant: "danger",
+                });
+                if (ok) {
                   deleteAllTasks();
+                  clearAllNotifications();
                   showToast("All data cleared", "warning");
                 }
               }}

@@ -45,6 +45,7 @@ export const TagSchema = z.object({
   name: z.string().min(1).max(50),
   color: z.string(),
   createdAt: z.string(),
+  isSeed: z.number().optional(),
 });
 
 export const TagCreateSchema = z.object({
@@ -81,7 +82,8 @@ CREATE TABLE IF NOT EXISTS tags (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL UNIQUE,
   color TEXT NOT NULL,
-  created_at TEXT NOT NULL
+  created_at TEXT NOT NULL,
+  is_seed INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS task_tags (

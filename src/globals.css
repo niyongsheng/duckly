@@ -2078,6 +2078,8 @@ body {
   right: 0;
   margin-top: 4px;
   width: 340px;
+  max-height: min(420px, 80vh);
+  overflow-y: auto;
   background: var(--bg-card);
   border: var(--border-default);
   box-shadow: var(--shadow-brutal);
@@ -2095,6 +2097,10 @@ body {
   justify-content: space-between;
   padding: var(--space-3) var(--space-4);
   border-bottom: var(--border-default);
+  position: sticky;
+  top: 0;
+  background: var(--bg-card);
+  z-index: 1;
 }
 
 .notif-panel-title {

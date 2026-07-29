@@ -34,6 +34,7 @@ export default function App() {
     loadTasks();
     loadTags();
     initAIChannel();
+
   }, [loadTasks, loadTags]);
 
   return (

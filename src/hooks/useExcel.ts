@@ -5,7 +5,6 @@ import { downloadTemplate, exportTasksToExcel, importTasksFromExcel } from "../u
 export function useExcel() {
   const tasks = useTaskStore((s) => s.tasks);
   const addTask = useTaskStore((s) => s.addTask);
-  const loadTasks = useTaskStore((s) => s.loadTasks);
 
   const exportTasks = useCallback(() => {
     exportTasksToExcel(tasks);
@@ -17,10 +16,12 @@ export function useExcel() {
       for (const task of imported) {
         await addTask(task);
       }
-      await loadTasks();
+      // Don't call loadTasks() — it would reload from DB and may return
+      // stale data (OPFS write might not be visible to a new query yet in
+      // SQLite WASM).  The store already has every task from addTask().
       return imported.length;
     },
-    [addTask, loadTasks],
+    [addTask],
   );
 
   const download = useCallback(() => {

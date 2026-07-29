@@ -17,6 +17,17 @@ const MIGRATIONS: Migration[] = [
     description: "Add start_date to tasks",
     sql: "ALTER TABLE tasks ADD COLUMN start_date TEXT;",
   },
+  {
+    version: 3,
+    description: "Add is_seed column and mark old defaults",
+    sql: [
+      "ALTER TABLE tags ADD COLUMN is_seed INTEGER NOT NULL DEFAULT 0;",
+      "UPDATE tags SET is_seed = 1 WHERE name IN (",
+      "  'Development', 'Urgent Business', 'Personal Growth', 'Daily Tasks',",
+      "  'Product Requirements', 'Meeting'",
+      ");",
+    ].join("\n"),
+  },
 ];
 
 export { MIGRATIONS };

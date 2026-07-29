@@ -102,6 +102,7 @@ interface NotificationState {
   ) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
+  clearAll: () => void;
 
   // Settings actions
   setWebhookUrl: (url: string) => void;
@@ -152,6 +153,10 @@ export const useNotificationStore = create<NotificationState>()(
         set((state) => ({
           notifications: state.notifications.map((n) => ({ ...n, read: true })),
         }));
+      },
+
+      clearAll: () => {
+        set({ notifications: [] });
       },
 
       setWebhookUrl: (url) => {

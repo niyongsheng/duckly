@@ -229,8 +229,8 @@
   "stats.overdue": "Overdue",
   "stats.quadrantLabels": "Do First,Schedule,Delegate,Eliminate",
 
-  "tag.presets": "Tech,Urgent,Growth,Chores,Product,Meeting",
-  "tag.presetsForm": "Tech,Product,Growth,Routine,Urgent,Meeting",
+  "tag.presets": "Development,Urgent Business,Personal Growth,Daily Tasks,Product Requirements,Meeting",
+  "tag.presetsForm": "Development,Product Requirements,Personal Growth,Daily Tasks,Urgent Business,Meeting",
 
   "webhook.eventDue": "Due Reminder",
   "webhook.eventDone": "Task Done",

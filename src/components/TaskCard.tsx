@@ -2,6 +2,7 @@ import type { Task } from "../db/schema";
 import { useTaskStore } from "../stores/useTaskStore";
 import { useUIStore } from "../stores/useUIStore";
 import { useI18n } from "../i18n/config";
+import { useConfirm } from "../hooks/useConfirm";
 import { PRIORITY_BG_COLORS } from "../constants";
 
 interface TaskCardProps {
@@ -12,9 +13,12 @@ export default function TaskCard({ task }: TaskCardProps) {
   const { t } = useI18n();
   const { toggleTask, deleteTask } = useTaskStore();
   const { openTaskForm } = useUIStore();
+  const [confirm, ConfirmDialog] = useConfirm();
 
   return (
-    <div className="task-item">
+    <>
+      <ConfirmDialog />
+      <div className="task-item">
       <input
         type="checkbox"
         className="task-checkbox"
@@ -38,7 +42,7 @@ export default function TaskCard({ task }: TaskCardProps) {
           </span>
           {task.dueDate && (
             <span style={{ fontSize: 11, color: "var(--medium-gray)" }}>
-              {new Date(task.dueDate).toLocaleDateString("zh-CN")}
+              {new Date(task.dueDate!).toLocaleDateString("zh-CN")}
             </span>
           )}
           {task.repeat !== "none" && (
@@ -65,7 +69,7 @@ export default function TaskCard({ task }: TaskCardProps) {
             {task.description}
           </p>
         )}
-        {task.tags.length > 0 && (
+        {task.tags && task.tags.length > 0 && (
           <div className="tag-group" style={{ marginTop: 6 }}>
             {task.tags.map((tag) => (
               <span
@@ -93,8 +97,9 @@ export default function TaskCard({ task }: TaskCardProps) {
         </button>
         <button
           className="task-btn-delete"
-          onClick={() => {
-            if (confirm(t("task.confirmDelete"))) deleteTask(task.id);
+          onClick={async () => {
+            const ok = await confirm({ message: t("task.confirmDelete") });
+            if (ok) deleteTask(task.id);
           }}
         >
           <svg className="icon icon-16" viewBox="0 0 24 24" fill="none">
@@ -108,5 +113,6 @@ export default function TaskCard({ task }: TaskCardProps) {
         </button>
       </div>
     </div>
+    </>
   );
 }

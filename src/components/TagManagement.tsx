@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useI18n } from "../i18n/config";
 import { useTagStore } from "../stores/useTagStore";
+import { useConfirm } from "../hooks/useConfirm";
 
 export default function TagManagement() {
   const { t } = useI18n();
@@ -9,6 +10,7 @@ export default function TagManagement() {
   const createTag = useTagStore((s) => s.createTag);
   const deleteTag = useTagStore((s) => s.deleteTag);
   const [newTagName, setNewTagName] = useState("");
+  const [confirm, ConfirmDialog] = useConfirm();
 
   const handleCreate = async () => {
     const name = newTagName.trim();
@@ -21,13 +23,14 @@ export default function TagManagement() {
 
   const handleDelete = async (e: React.MouseEvent, id: string, name: string) => {
     e.stopPropagation();
-    if (confirm(`删除标签「${name}」？`)) {
-      await deleteTag(id);
-    }
+    const ok = await confirm({ message: `删除标签「${name}」？` });
+    if (ok) await deleteTag(id);
   };
 
   return (
-    <div className="card">
+    <>
+      <ConfirmDialog />
+      <div className="card">
       <h3
         style={{
           fontSize: 24,
@@ -95,5 +98,6 @@ export default function TagManagement() {
         </button>
       </div>
     </div>
+    </>
   );
 }

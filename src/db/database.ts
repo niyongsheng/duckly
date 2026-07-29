@@ -26,10 +26,11 @@ export class DatabaseClient {
   }
 
   async exec(sql: string): Promise<void> {
-    await this.promiser("exec", {
+    const result = await this.promiser("exec", {
       dbId: this.dbId,
       sql,
     });
+    if (result?.error) throw new Error(`SQL exec error: ${result.error}`);
   }
 
   async query<T = Record<string, unknown>>(
@@ -43,6 +44,10 @@ export class DatabaseClient {
       rowMode: "object",
       resultRows: [],
     });
+    if (result?.error) {
+      console.error("[DB] query error:", result.error, "for SQL:", sql);
+      return [];
+    }
     return (result?.resultRows as T[]) ?? [];
   }
 
@@ -52,6 +57,26 @@ export class DatabaseClient {
   ): Promise<T | null> {
     const rows = await this.query<T>(sql, params);
     return rows.length > 0 ? rows[0] : null;
+  }
+
+  // ── Task row mapper ──
+  // SQLite returns snake_case rows without a `tags` column.
+  // Normalise to the camelCase Task type expected by the UI.
+
+  private mapTask(row: Record<string, unknown>): Task {
+    return {
+      id: row.id as string,
+      title: (row.title ?? "") as string,
+      description: (row.description ?? "") as string,
+      priority: row.priority as Task["priority"],
+      status: (row.status ?? "todo") as Task["status"],
+      tags: (row.tags ?? []) as string[],
+      startDate: (row.startDate ?? row.start_date ?? undefined) as string | undefined,
+      dueDate: (row.dueDate ?? row.due_date ?? undefined) as string | undefined,
+      repeat: (row.repeat ?? "none") as Task["repeat"],
+      createdAt: (row.createdAt ?? row.created_at ?? "") as string,
+      updatedAt: (row.updatedAt ?? row.updated_at ?? "") as string,
+    };
   }
 
   // ── Task CRUD ──
@@ -174,43 +199,49 @@ export class DatabaseClient {
   }
 
   async getTask(id: string): Promise<Task | null> {
-    return this.get<Task>("SELECT * FROM tasks WHERE id = $id", { $id: id });
+    const row = await this.get<Record<string, unknown>>("SELECT * FROM tasks WHERE id = $id", {
+      $id: id,
+    });
+    return row ? this.mapTask(row) : null;
   }
 
   async getAllTasks(): Promise<Task[]> {
-    return this.query<Task>("SELECT * FROM tasks ORDER BY created_at DESC");
+    const rows = await this.query<Record<string, unknown>>("SELECT * FROM tasks ORDER BY created_at DESC");
+    return rows.map((r) => this.mapTask(r));
   }
 
   async getTasksByPriority(priority: string): Promise<Task[]> {
-    return this.query<Task>(
+    const rows = await this.query<Record<string, unknown>>(
       "SELECT * FROM tasks WHERE priority = $priority ORDER BY created_at DESC",
-      {
-        $priority: priority,
-      },
+      { $priority: priority },
     );
+    return rows.map((r) => this.mapTask(r));
   }
 
   async getTasksByStatus(status: string): Promise<Task[]> {
-    return this.query<Task>("SELECT * FROM tasks WHERE status = $status ORDER BY created_at DESC", {
-      $status: status,
-    });
+    const rows = await this.query<Record<string, unknown>>(
+      "SELECT * FROM tasks WHERE status = $status ORDER BY created_at DESC",
+      { $status: status },
+    );
+    return rows.map((r) => this.mapTask(r));
   }
 
   // ── Tag CRUD ──
 
-  async createTag(name: string, color: string): Promise<Tag> {
+  async createTag(name: string, color: string, isSeed?: boolean): Promise<Tag> {
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
-    const tag: Tag = { id, name, color, createdAt: now };
+    const tag: Tag = { id, name, color, createdAt: now, isSeed: isSeed ? 1 : 0 };
 
     await this.promiser("exec", {
       dbId: this.dbId,
-      sql: "INSERT INTO tags (id, name, color, created_at) VALUES ($id, $name, $color, $createdAt)",
+      sql: "INSERT INTO tags (id, name, color, created_at, is_seed) VALUES ($id, $name, $color, $createdAt, $isSeed)",
       bind: {
         $id: tag.id,
         $name: tag.name,
         $color: tag.color,
         $createdAt: tag.createdAt,
+        $isSeed: tag.isSeed ?? 0,
       },
     });
 
@@ -258,10 +289,7 @@ export async function initDatabase(): Promise<DatabaseClient> {
     await p("exec", { dbId: currentDbId, sql });
   });
 
-  // Convert column names: snake_case -> camelCase mapping
-  // The SQLite returns snake_case columns from our schema.
-  // We handle this by using aliases in queries or post-processing.
-  // For simplicity, we'll keep snake_case in SQL and convert in the store layer.
+  // Column mapping (snake_case → camelCase + default tags) handled in `mapTask()`.
 
   return dbInstance;
 }

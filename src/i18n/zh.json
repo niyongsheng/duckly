@@ -229,8 +229,8 @@
   "stats.overdue": "已逾期",
   "stats.quadrantLabels": "立即做,计划做,委托做,消除",
 
-  "tag.presets": "技术开发,紧急业务,个人成长,日常琐事,产品需求,会议",
-  "tag.presetsForm": "技术开发,产品需求,个人成长,日常事务,紧急业务,会议",
+  "tag.presets": "Development,Urgent Business,Personal Growth,Daily Tasks,Product Requirements,Meeting",
+  "tag.presetsForm": "Development,Product Requirements,Personal Growth,Daily Tasks,Urgent Business,Meeting",
 
   "webhook.eventDue": "到期提醒",
   "webhook.eventDone": "任务完成",

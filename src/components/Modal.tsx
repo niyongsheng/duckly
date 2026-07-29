@@ -6,9 +6,11 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  maxWidth?: string;
+  compact?: boolean;
 }
 
-export default function Modal({ isOpen, onClose, title, children }: ModalProps) {
+export default function Modal({ isOpen, onClose, title, children, maxWidth = "1152px", compact = false }: ModalProps) {
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -48,7 +50,7 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
             style={{
               background: "var(--bg-card)",
               border: "var(--border-default)",
-              maxWidth: "1152px",
+              maxWidth,
               width: "100%",
               maxHeight: "90vh",
               overflowY: "auto",
@@ -58,12 +60,12 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
             <div
               className="sticky top-0 z-10 flex items-center justify-between"
               style={{
-                padding: "var(--space-8) var(--space-8) var(--space-6)",
+                padding: compact ? "var(--space-4) var(--space-5)" : "var(--space-8) var(--space-8) var(--space-6)",
                 background: "var(--bg-card)",
                 borderBottom: "var(--border-default)",
               }}
             >
-              <h2 className="modal-title">{title}</h2>
+              <h2 style={compact ? { fontSize: 20, fontWeight: 700, letterSpacing: "-0.025em", color: "var(--dark-gray)" } : undefined} className={compact ? undefined : "modal-title"}>{title}</h2>
               <button onClick={onClose} className="modal-close" aria-label="Close">
                 <svg className="icon icon-24" viewBox="0 0 24 24" fill="none">
                   <path
@@ -77,7 +79,7 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
             </div>
 
             {/* Body */}
-            <div style={{ padding: "var(--space-8)" }}>{children}</div>
+            <div style={{ padding: compact ? "var(--space-4) var(--space-5) var(--space-5)" : "var(--space-8)" }}>{children}</div>
           </motion.div>
         </div>
       )}

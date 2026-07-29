@@ -3,7 +3,7 @@ import { useI18n } from "../i18n/config";
 import { usePWA } from "../hooks/usePWA";
 import { useTaskStore } from "../stores/useTaskStore";
 import { useUIStore } from "../stores/useUIStore";
-import Modal from "./Modal";
+import ConfirmDialog from "./ConfirmDialog";
 
 type ConfirmAction = "clearDone" | "deleteAll" | null;
 
@@ -120,30 +120,24 @@ export default function BatchOperations() {
         </p>
       </div>
 
-      {/* Confirm Modal */}
-      <Modal
+      {/* Confirm Dialog */}
+      <ConfirmDialog
         isOpen={confirmAction !== null}
         onClose={() => setConfirmAction(null)}
+        onConfirm={handleConfirm}
         title={t("task.confirm")}
-      >
-        <div style={{ padding: "var(--space-4) 0" }}>
-          <p style={{ fontSize: 16, marginBottom: "var(--space-6)", lineHeight: 1.6 }}>
-            {confirmAction === "clearDone"
-              ? t("task.confirmClearDone").replace("{count}", String(doneCount))
-              : confirmAction === "deleteAll"
-                ? t("task.confirmDeleteAll").replace("{count}", String(tasks.length))
-                : ""}
-          </p>
-          <div style={{ display: "flex", gap: "var(--space-3)", justifyContent: "flex-end" }}>
-            <button className="btn btn-small" onClick={() => setConfirmAction(null)}>
-              {t("task.cancel")}
-            </button>
-            <button className="btn btn-small btn-danger" onClick={handleConfirm}>
-              {confirmAction === "deleteAll" ? t("batch.deleteAll") : t("batch.clearDone")}
-            </button>
-          </div>
-        </div>
-      </Modal>
+        message={
+          confirmAction === "clearDone"
+            ? t("task.confirmClearDone").replace("{count}", String(doneCount))
+            : confirmAction === "deleteAll"
+              ? t("task.confirmDeleteAll").replace("{count}", String(tasks.length))
+              : ""
+        }
+        confirmText={
+          confirmAction === "deleteAll" ? t("batch.deleteAll") : t("batch.clearDone")
+        }
+        variant="danger"
+      />
     </>
   );
 }

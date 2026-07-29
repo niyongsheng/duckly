@@ -18,9 +18,9 @@ export default defineConfig({
         "icons/*.png",
       ],
       manifest: {
-        name: "Duckly - 日程管理",
+        name: "Duckly - manage your everyday",
         short_name: "Duckly",
-        description: "可爱的卡通风格日程管理 Web 应用，支持离线使用",
+        description: "一款精美的日程管理 Web 应用，支持离线使用",
         lang: "zh-CN",
         start_url: base,
         scope: base,
@@ -30,12 +30,12 @@ export default defineConfig({
         categories: ["productivity", "utilities"],
         icons: [
           {
-            src: "/icons/android-chrome-192x192.png",
+            src: "icons/android-chrome-192x192.png",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "/icons/android-chrome-512x512.png",
+            src: "icons/android-chrome-512x512.png",
             sizes: "512x512",
             type: "image/png",
           },

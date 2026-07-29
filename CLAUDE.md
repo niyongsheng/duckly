@@ -10,7 +10,8 @@ A cute cartoon-style Eisenhower Matrix task scheduler PWA.
 - **State:** Zustand 5
 - **Database:** SQLite WASM (OPFS-persisted via `@sqlite.org/sqlite-wasm`)
 - **PWA:** VitePWA with Workbox (auto-update SW)
-- **Deploy:** GitHub Pages (`niyongsheng.github.io/duckly/`)
+- **Deploy:** GitHub Pages (`niyongsheng.github.io/duckly/`), Cloudflare Pages (separate workflow)
+- **Release:** Push `v*` tag triggers GitHub Release with auto-generated changelog
 
 ## Commands
 
@@ -31,6 +32,13 @@ A cute cartoon-style Eisenhower Matrix task scheduler PWA.
 - `src/i18n/` — Internationalization (zh.json / en.json)
 - `src/hooks/` — Custom hooks (usePWA, useDatabase, useToast, useExcel)
 - `docs/` — Documentation including `ai-api.md`
+
+## CI/CD
+
+- **Push to `main`** → Build + deploy to GitHub Pages (`.github/workflows/deploy.yml`)
+- **Push `v*` tag** (e.g. `v1.0.0`) → Build + deploy + create GitHub Release with changelog
+- **Cloudflare Pages** → Separate workflow (`deploy-cf.yml`), requires `CLOUDFLARE_API_TOKEN` secret
+- Notifications are persisted in SQLite (`notifications` table), not localStorage
 
 ## AI API
 

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Priority, RepeatType, TaskCreate } from "../db/schema";
 import { useI18n } from "../i18n/config";
+import { useTagStore } from "../stores/useTagStore";
 import { useTaskStore } from "../stores/useTaskStore";
 import { useUIStore } from "../stores/useUIStore";
 import Modal from "./Modal";
@@ -24,11 +25,15 @@ export default function TaskForm() {
     { value: "monthly" as RepeatType, label: t("repeat.monthly") },
   ], [t]);
 
-  const TAG_PRESETS = useMemo(() => {
-    const names = t("tag.presetsForm").split(",");
-    const colors = ["var(--blue)", "var(--coral)", "var(--yellow)", "var(--cyan)"];
-    return names.map((name: string, i: number) => ({ name: name.trim(), color: colors[i] || "var(--blue)" }));
-  }, [t]);
+  const storeTags = useTagStore((s) => s.tags);
+  const loadStoreTags = useTagStore((s) => s.loadTags);
+
+  // Load tags when form opens
+  useEffect(() => {
+    if (showTaskForm && storeTags.length === 0) {
+      loadStoreTags();
+    }
+  }, [showTaskForm, storeTags.length, loadStoreTags]);
 
   const editingTask = editingTaskId ? tasks.find((t) => t.id === editingTaskId) : null;
 
@@ -40,6 +45,7 @@ export default function TaskForm() {
   const [repeat, setRepeat] = useState<RepeatType>("none");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [titleError, setTitleError] = useState(false);
 
   useEffect(() => {
     if (editingTask) {
@@ -58,6 +64,7 @@ export default function TaskForm() {
       setEndDate("");
       setRepeat("none");
       setSelectedTags([]);
+      setTitleError(false);
     }
   }, [editingTask, showTaskForm]);
 
@@ -69,7 +76,11 @@ export default function TaskForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
+    if (!title.trim()) {
+      setTitleError(true);
+      return;
+    }
+    setTitleError(false);
 
     setSaving(true);
     try {
@@ -105,15 +116,24 @@ export default function TaskForm() {
       <form className="task-form" onSubmit={handleSubmit}>
         {/* Title */}
         <div>
-          <label>{t("task.name")}</label>
+          <label>
+            {t("task.name")}
+            <span className="required-mark">*</span>
+          </label>
           <input
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="form-input"
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (titleError) setTitleError(false);
+            }}
+            className={`form-input${titleError ? " input-error" : ""}`}
             placeholder={t("task.namePlaceholder")}
             autoFocus
           />
+          {titleError && (
+            <span className="field-error">{t("task.nameRequired")}</span>
+          )}
         </div>
 
         {/* Description */}
@@ -185,9 +205,9 @@ export default function TaskForm() {
         <div>
           <label>{t("task.tags")}</label>
           <div className="tag-select">
-            {TAG_PRESETS.map((tag) => (
+            {storeTags.map((tag) => (
               <span
-                key={tag.name}
+                key={tag.id}
                 className={`tag tag-pill${selectedTags.includes(tag.name) ? " active" : ""}`}
                 style={{
                   background: selectedTags.includes(tag.name) ? tag.color : "transparent",

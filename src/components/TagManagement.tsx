@@ -1,25 +1,33 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useI18n } from "../i18n/config";
+import { useTagStore } from "../stores/useTagStore";
 
 export default function TagManagement() {
   const { t } = useI18n();
-  const [addedTags, setAddedTags] = useState<Array<{ name: string; color: string }>>([]);
+  const tags = useTagStore((s) => s.tags);
+  const loadTags = useTagStore((s) => s.loadTags);
+  const createTag = useTagStore((s) => s.createTag);
+  const deleteTag = useTagStore((s) => s.deleteTag);
   const [newTagName, setNewTagName] = useState("");
 
-  const presetColors = ["var(--blue)", "var(--coral)", "var(--yellow)", "var(--cyan)"];
-  const presetTags = t("tag.presets").split(",").map((name: string, i: number) => ({
-    name: name.trim(),
-    color: presetColors[i] || "var(--blue)",
-  }));
-  const allTags = [...presetTags, ...addedTags];
+  useEffect(() => {
+    loadTags();
+  }, [loadTags]);
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     const name = newTagName.trim();
     if (!name) return;
-    const extraColors = ["var(--pink)", "var(--orange-primary)"];
-    const color = extraColors[addedTags.length % extraColors.length];
-    setAddedTags([...addedTags, { name, color }]);
+    const colors = ["var(--pink)", "var(--orange-primary)", "var(--coral)", "var(--blue)", "var(--yellow)", "var(--cyan)"];
+    const color = colors[tags.length % colors.length];
+    await createTag(name, color);
     setNewTagName("");
+  };
+
+  const handleDelete = async (e: React.MouseEvent, id: string, name: string) => {
+    e.stopPropagation();
+    if (confirm(`删除标签「${name}」？`)) {
+      await deleteTag(id);
+    }
   };
 
   return (
@@ -46,9 +54,24 @@ export default function TagManagement() {
         {t("tag.management")}
       </h3>
       <div className="tag-group" style={{ marginBottom: "var(--space-6)" }}>
-        {allTags.map((tag) => (
-          <span key={tag.name} className="tag tag-pill" style={{ background: tag.color }}>
+        {tags.map((tag) => (
+          <span
+            key={tag.id}
+            className="tag tag-pill"
+            style={{ background: tag.color, cursor: "pointer", position: "relative" }}
+            title="点击删除"
+            onClick={(e) => handleDelete(e, tag.id, tag.name)}
+          >
             {tag.name}
+            <span
+              style={{
+                marginLeft: 6,
+                fontSize: 10,
+                opacity: 0.6,
+              }}
+            >
+              ×
+            </span>
           </span>
         ))}
       </div>

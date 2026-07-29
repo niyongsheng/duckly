@@ -1,6 +1,6 @@
 {
   "app.title": "Duckly",
-  "app.subtitle": "日程管理应用",
+  "app.subtitle": "Duckly manage your everyday.",
 
   "header.calendar": "日历视图",
   "header.quadrant": "四象限视图",
@@ -99,7 +99,6 @@
   "settings.title": "设置",
   "settings.appearance": "外观",
   "settings.darkMode": "深色模式",
-  "settings.compact": "紧凑布局",
   "settings.integration": "集成",
   "settings.data": "数据管理",
   "settings.notifications": "通知",
@@ -129,12 +128,22 @@
   "settings.apiDocs": "接口协议文档",
   "settings.apiDocsDesc": "查看 API 文档和接入说明",
   "settings.footer": "Duckly v1.0.0 · 所有数据本地 OPFS 存储 · 离线可用",
+  "settings.installDesc": "安装到设备桌面",
 
   "notif.title": "通知",
   "notif.unread": "条未读",
   "notif.markAllRead": "全部标为已读",
   "notif.empty": "暂无通知",
   "notif.markedRead": "已标记所有通知为已读",
+
+  "list.title": "全部任务列表",
+  "list.filterUrgent": "紧急",
+  "list.filterImportant": "重要",
+  "list.filterInProgress": "进行中",
+  "list.filterDone": "已完成",
+  "date.year": "年",
+  "date.month": "月",
+  "date.day": "日",
 
   "stats.title": "任务数据统计",
   "stats.chart": "图表视图",
@@ -166,6 +175,7 @@
   "task.formTitle": "新建任务",
   "task.editTitle": "编辑任务",
   "task.name": "任务名称",
+  "task.nameRequired": "请输入任务名称",
   "task.namePlaceholder": "输入任务名称…",
   "task.descPlaceholder": "添加备注、链接或说明…",
   "task.quadrant": "所属象限（优先级）",
@@ -176,6 +186,7 @@
   "task.create": "创建任务",
   "task.saveChanges": "保存更改",
   "task.saving": "保存中…",
+  "task.confirm": "确认操作",
   "task.confirmDelete": "删除此任务？",
   "task.confirmClearDone": "确定清空 {count} 个已完成任务？",
   "task.confirmDeleteAll": "确定删除全部 {count} 个任务？此操作不可撤销！",
@@ -230,5 +241,12 @@
   "settings.notifDeadlinePush": "截止日期推送",
   "settings.notifSound": "声音提示",
   "settings.notifWebhook": "Webhook 推送",
-  "settings.notifPreRemind": "到期前 24h 预提醒"
+  "settings.notifPreRemind": "到期前 24h 预提醒",
+
+  "notif.deadlineApproaching": "「{title}」明天截止",
+  "notif.dueToday": "「{title}」今天截止",
+  "notif.overdue": "「{title}」已逾期",
+  "notif.taskCreated": "「{title}」已创建",
+  "notif.taskCompleted": "「{title}」已完成",
+  "notif.deadlineChanged": "「{title}」截止日期已变更"
 }

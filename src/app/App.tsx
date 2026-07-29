@@ -16,11 +16,13 @@ import TagManagement from "../components/TagManagement";
 import TaskForm from "../components/TaskForm";
 import ToastContainer from "../components/Toast";
 import { useToast } from "../hooks/useToast";
+import { useReminder } from "../hooks/useReminder";
 import { useTaskStore } from "../stores/useTaskStore";
 import { useUIStore } from "../stores/useUIStore";
 
 export default function App() {
   const { t } = useI18n();
+  useReminder();
   const loadTasks = useTaskStore((s) => s.loadTasks);
   const viewMode = useUIStore((s) => s.viewMode);
   const { toasts, removeToast } = useToast();

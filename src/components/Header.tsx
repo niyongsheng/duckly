@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useI18n } from "../i18n/config";
 import { useUIStore } from "../stores/useUIStore";
+import { useNotificationStore } from "../stores/useNotificationStore";
 import NotificationPanel from "./NotificationPanel";
 import DuckLogo from "./DuckLogo";
 
 export default function Header() {
   const { t, locale, setLocale } = useI18n();
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const unreadCount = useNotificationStore((s) => s.unreadCount());
   const {
     viewMode,
     setViewMode,
@@ -165,7 +167,9 @@ export default function Header() {
                   strokeLinecap="round"
                 />
               </svg>
-              <span className="notif-badge">3</span>
+              {unreadCount > 0 && (
+                <span className="notif-badge">{unreadCount > 99 ? "99+" : unreadCount}</span>
+              )}
             </button>
             {showNotifications && (
               <>

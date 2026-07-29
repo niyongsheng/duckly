@@ -173,7 +173,7 @@ export default function CalendarView() {
   }, [calStart, calEnd]);
 
   const selectedDateStr = selectedDate
-    ? `${selectedDate.getFullYear()}年${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日 ${weekdaysFull[selectedDate.getDay()]}`
+    ? `${selectedDate.getFullYear()}${t("date.year")}${selectedDate.getMonth() + 1}${t("date.month")}${selectedDate.getDate()}${t("date.day")} ${weekdaysFull[selectedDate.getDay()]}`
     : "";
   const selectedDateKey = selectedDate
     ? formatDateKey(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate())
@@ -330,8 +330,8 @@ export default function CalendarView() {
             </button>
             <span className="calendar-month-year">
               {mode === "year"
-                ? `${currentDate.getFullYear()}年`
-                : `${currentDate.getFullYear()}年 ${monthsCn[currentDate.getMonth()]}`}
+                ? `${currentDate.getFullYear()}${t("date.year")}`
+                : `${currentDate.getFullYear()}${t("date.year")} ${monthsCn[currentDate.getMonth()]}`}
             </span>
             <button className="calendar-nav-btn" onClick={() => navigate(1)}>
               <svg className="icon icon-20" viewBox="0 0 24 24" fill="none">
@@ -350,7 +350,7 @@ export default function CalendarView() {
                 <rect x="10" y="6" width="4" height="12" rx="1" fill="currentColor" opacity="0.6" />
                 <rect x="6" y="10" width="12" height="4" rx="1" fill="currentColor" opacity="0.6" />
               </svg>
-              今天
+              {t("calendar.today")}
             </button>
           </div>
 
@@ -461,7 +461,7 @@ export default function CalendarView() {
             <div>
               <div className="calendar-grid" ref={gridRef}>
                 {weekdaysShort.map((d, i) => (
-                  <div key={d} className={`calendar-weekday ${i >= 5 ? "weekend" : ""}`}>
+                  <div key={d} className={`calendar-weekday ${i === 0 || i >= 6 ? "weekend" : ""}`}>
                     {d}
                   </div>
                 ))}
@@ -493,7 +493,7 @@ export default function CalendarView() {
                             </div>
                           ))}
                           {dayTasks.length > 3 && (
-                            <div className="cal-more-link">+{dayTasks.length - 3} 更多</div>
+                            <div className="cal-more-link">+{dayTasks.length - 3} {t("calendar.more")}</div>
                           )}
                         </div>
                       )}
@@ -548,7 +548,7 @@ export default function CalendarView() {
               {weekDays.map((d, i) => (
                 <div
                   key={i}
-                  className={`week-day-header${d.getDay() >= 5 ? " weekend" : ""}${isSameDay(d, today) ? " today" : ""}`}
+                  className={`week-day-header${d.getDay() === 0 || d.getDay() >= 6 ? " weekend" : ""}${isSameDay(d, today) ? " today" : ""}`}
                 >
                   <div className="wd-name">{weekdaysShort[d.getDay()]}</div>
                   <div className="wd-date">{d.getDate()}</div>
@@ -628,7 +628,7 @@ export default function CalendarView() {
                           key={task.id}
                           className={`day-task-block ${getPriorityColor(task)}${task.status === "done" ? " done" : ""}`}
                         >
-                          <span className="dt-time">全天</span>
+                          <span className="dt-time">{t("calendar.allDay")}</span>
                           <span className="dt-text">{task.title}</span>
                           <span
                             className="dt-tag"
@@ -667,10 +667,10 @@ export default function CalendarView() {
                       setMode("month");
                     }}
                   >
-                    <div className="year-month-title">{m + 1}月</div>
+                    <div className="year-month-title">{monthsCn[m]}</div>
                     <div className="year-month-weekdays">
                       {weekdaysShort.map((wd, i) => (
-                        <span key={wd} className={`year-month-weekday${i >= 5 ? " weekend" : ""}`}>
+                        <span key={wd} className={`year-month-weekday${i === 0 || i >= 6 ? " weekend" : ""}`}>
                           {wd}
                         </span>
                       ))}
@@ -727,7 +727,10 @@ function CalendarSidebar({
   onAddTask?: () => void;
 }) {
   const { t } = useI18n();
-  void tasksCount; // used in the JSX above
+  const overdueCount = selectedTasks.filter((task) => {
+    if (!task.dueDate) return false;
+    return new Date(task.dueDate) < new Date();
+  }).length;
   return (
     <div className="calendar-sidebar">
       {/* Selected date info */}
@@ -742,16 +745,10 @@ function CalendarSidebar({
         </div>
         <div style={{ display: "flex", gap: "var(--space-2)", marginTop: "var(--space-3)" }}>
           <span className="cal-sidebar-task-tag" style={{ background: "var(--blue)" }}>
-            {tasksCount}个任务
+            {t("calendar.tasksCount").replace("{count}", String(tasksCount))}
           </span>
           <span className="cal-sidebar-task-tag" style={{ background: "var(--yellow)" }}>
-            {
-              selectedTasks.filter((t) => {
-                if (!t.dueDate) return false;
-                return new Date(t.dueDate) < new Date();
-              }).length
-            }
-            个截止
+            {overdueCount}{t("calendar.deadline")}
           </span>
         </div>
       </div>
@@ -767,12 +764,12 @@ function CalendarSidebar({
               strokeLinecap="round"
             />
           </svg>
-          任务安排
+          {t("calendar.taskSchedule")}
         </div>
 
         {selectedTasks.length === 0 ? (
           <div className="empty-tip" style={{ padding: "var(--space-3)" }}>
-            暂无任务安排
+            {t("calendar.noTasksScheduled")}
           </div>
         ) : (
           selectedTasks.map((task) => {
@@ -823,7 +820,7 @@ function CalendarSidebar({
               strokeLinecap="round"
             />
           </svg>
-          添加任务
+          {t("calendar.addTask")}
         </button>
       </div>
 
@@ -838,7 +835,7 @@ function CalendarSidebar({
               strokeLinecap="round"
             />
           </svg>
-          快捷筛选
+          {t("calendar.quickFilter")}
         </div>
         <div className="tag-group">
           <span
@@ -850,16 +847,16 @@ function CalendarSidebar({
               cursor: "pointer",
             }}
           >
-            紧急
+            {t("list.filterUrgent")}
           </span>
           <span className="tag tag-pill" style={{ background: "var(--blue)", cursor: "pointer" }}>
-            重要
+            {t("list.filterImportant")}
           </span>
           <span className="tag tag-pill" style={{ background: "var(--yellow)", cursor: "pointer" }}>
-            进行中
+            {t("list.filterInProgress")}
           </span>
           <span className="tag tag-pill" style={{ background: "var(--cyan)", cursor: "pointer" }}>
-            已完成
+            {t("list.filterDone")}
           </span>
         </div>
       </div>

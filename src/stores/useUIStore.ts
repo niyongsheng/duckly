@@ -14,7 +14,6 @@ interface UIState {
   showNotifications: boolean;
   showStatsModal: boolean;
   darkMode: boolean;
-  compactLayout: boolean;
   calendarMode: CalendarMode;
   aiChannelOpen: boolean;
   aiPermission: AIPermission;
@@ -33,7 +32,6 @@ interface UIState {
   closeNotifications: () => void;
   setShowStatsModal: (show: boolean) => void;
   setDarkMode: (dark: boolean) => void;
-  setCompactLayout: (compact: boolean) => void;
   setCalendarMode: (mode: CalendarMode) => void;
   setAIChannel: (open: boolean, permission?: AIPermission) => void;
   setSearchQuery: (query: string) => void;
@@ -50,7 +48,6 @@ export const useUIStore = create<UIState>((set) => ({
   showNotifications: false,
   showStatsModal: false,
   darkMode: false,
-  compactLayout: false,
   calendarMode: "month",
   aiChannelOpen: false,
   aiPermission: "readonly",
@@ -77,8 +74,6 @@ export const useUIStore = create<UIState>((set) => ({
   setShowStatsModal: (show) => set({ showStatsModal: show }),
 
   setDarkMode: (dark) => set({ darkMode: dark }),
-
-  setCompactLayout: (compact) => set({ compactLayout: compact }),
 
   setCalendarMode: (mode) => set({ calendarMode: mode }),
 

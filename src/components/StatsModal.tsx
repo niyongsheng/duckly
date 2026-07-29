@@ -181,7 +181,7 @@ export default function StatsModal() {
               />
               <path d="M5 12h7" stroke="currentColor" strokeWidth="2" />
             </svg>
-            任务完成状态饼图
+            {t("stats.pieChart")}
           </div>
         </div>
       ) : (
@@ -197,7 +197,7 @@ export default function StatsModal() {
                     fontWeight: 700,
                   }}
                 >
-                  标题
+                  {t("task.title")}
                 </th>
                 <th
                   style={{
@@ -206,7 +206,7 @@ export default function StatsModal() {
                     fontWeight: 700,
                   }}
                 >
-                  优先级
+                  {t("task.priority")}
                 </th>
                 <th
                   style={{
@@ -215,7 +215,7 @@ export default function StatsModal() {
                     fontWeight: 700,
                   }}
                 >
-                  状态
+                  {t("task.status")}
                 </th>
               </tr>
             </thead>

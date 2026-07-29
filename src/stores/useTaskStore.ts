@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { initDatabase } from "../db/database";
 import type { Task, TaskCreate, TaskUpdate } from "../db/schema";
+import { useNotificationStore, fireWebhook } from "./useNotificationStore";
 
 interface TaskStats {
   total: number;
@@ -19,6 +20,7 @@ interface TaskState {
   addTask: (data: TaskCreate) => Promise<Task>;
   updateTask: (id: string, data: TaskUpdate) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
+  deleteAllTasks: () => Promise<void>;
   toggleTask: (id: string) => Promise<void>;
   getTasksByPriority: (priority: string) => Task[];
   getTasksForDate: (dateKey: string) => Task[];
@@ -45,6 +47,13 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     const db = await initDatabase();
     const task = await db.createTask(data);
     set((state) => ({ tasks: [task, ...state.tasks] }));
+    // Fire notification + webhook
+    const ns = useNotificationStore.getState();
+    ns.addNotification(task.id, task.title, "task_created");
+    const { webhookUrl, webhookEvents, toggles } = ns.settings;
+    if (webhookUrl && toggles.webhookPush && webhookEvents.create) {
+      fireWebhook(webhookUrl, "create", task);
+    }
     return task;
   },
 
@@ -65,6 +74,19 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       console.error("Failed to sync update to DB:", err);
       // Rollback local state on failure
       set({ tasks: prevTasks });
+      return;
+    }
+    // Fire notification + webhook if dueDate changed
+    if (data.dueDate !== undefined) {
+      const task = get().tasks.find((t) => t.id === id);
+      if (task) {
+        const ns = useNotificationStore.getState();
+        ns.addNotification(task.id, task.title, "deadline_changed");
+        const { webhookUrl, webhookEvents, toggles } = ns.settings;
+        if (webhookUrl && toggles.webhookPush && webhookEvents.change) {
+          fireWebhook(webhookUrl, "change", task);
+        }
+      }
     }
   },
 
@@ -74,11 +96,29 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     set((state) => ({ tasks: state.tasks.filter((t) => t.id !== id) }));
   },
 
+  deleteAllTasks: async () => {
+    const db = await initDatabase();
+    await db.deleteAllTasks();
+    set({ tasks: [], error: null });
+  },
+
   toggleTask: async (id: string) => {
     const task = get().tasks.find((t) => t.id === id);
     if (!task) return;
     const newStatus: Task["status"] = task.status === "done" ? "todo" : "done";
     await get().updateTask(id, { status: newStatus });
+    // Fire notification + webhook when task is completed
+    if (newStatus === "done") {
+      const updated = get().tasks.find((t) => t.id === id);
+      if (updated) {
+        const ns = useNotificationStore.getState();
+        ns.addNotification(updated.id, updated.title, "task_completed");
+        const { webhookUrl, webhookEvents, toggles } = ns.settings;
+        if (webhookUrl && toggles.webhookPush && webhookEvents.done) {
+          fireWebhook(webhookUrl, "done", updated);
+        }
+      }
+    }
   },
 
   getTasksByPriority: (priority: string) => {

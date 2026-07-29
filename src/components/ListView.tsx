@@ -59,7 +59,7 @@ export default function ListView() {
             gap: "var(--space-4)",
           }}
         >
-          <h3 style={{ fontSize: 24, fontWeight: 700 }}>全部任务列表</h3>
+          <h3 style={{ fontSize: 24, fontWeight: 700 }}>{t("list.title")}</h3>
           <div style={{ display: "flex", gap: "var(--space-3)", flexWrap: "wrap" }}>
             <div style={{ display: "flex", gap: 0 }}>
               <input
@@ -141,7 +141,7 @@ export default function ListView() {
           }}
         >
           <span style={{ fontSize: 13, color: "var(--medium-gray)" }}>
-            共 {t("task.totalItems").replace("{count}", String(filtered.length))}
+            {t("task.totalItems").replace("{count}", String(filtered.length))}
           </span>
           {totalPages > 1 && (
             <div style={{ display: "flex", gap: "var(--space-2)" }}>
@@ -151,7 +151,7 @@ export default function ListView() {
                 style={{ opacity: safePage <= 1 ? 0.4 : 1 }}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
-                上一页
+                {t("task.prev")}
               </button>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
                 <button
@@ -168,7 +168,7 @@ export default function ListView() {
                 style={{ opacity: safePage >= totalPages ? 0.4 : 1 }}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               >
-                下一页
+                {t("task.next")}
               </button>
             </div>
           )}

@@ -12,8 +12,8 @@
   --cyan: #4dd4d0;
   --yellow: #ffd500;
   --coral: #ff6b6b;
-  --orange-primary: #ff9500;
-  --orange-secondary: #ff6b00;
+  --orange-primary: #ffd500;
+  --orange-secondary: #ff6b6b;
   --pink: #ffb6c1;
 
   /* Font */
@@ -77,8 +77,8 @@
   --cyan: #45d5d0;
   --yellow: #f0cc00;
   --coral: #ff6b6b;
-  --orange-primary: #ff9f1a;
-  --orange-secondary: #e66800;
+  --orange-primary: #ffd500;
+  --orange-secondary: #ff6b6b;
   --pink: #d4607a;
   --shadow-brutal: 4px 4px 0 0 #3a3a42;
   --shadow-brutal-active: 2px 2px 0 0 #3a3a42;
@@ -2225,6 +2225,23 @@ body {
   letter-spacing: 0.05em;
   margin-bottom: var(--space-2);
   color: var(--medium-gray);
+}
+
+.task-form label .required-mark {
+  color: var(--coral);
+  margin-left: 2px;
+}
+
+.task-form .field-error {
+  display: block;
+  font-size: 12px;
+  color: var(--coral);
+  margin-top: 4px;
+}
+
+.task-form .input-error {
+  border-color: var(--coral) !important;
+  box-shadow: 0 0 0 1px var(--coral);
 }
 
 .task-form .form-input,

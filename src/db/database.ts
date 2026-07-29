@@ -229,6 +229,13 @@ export class DatabaseClient {
     });
     return true;
   }
+
+  async deleteAllTasks(): Promise<void> {
+    await this.promiser("exec", {
+      dbId: this.dbId,
+      sql: "DELETE FROM tasks",
+    });
+  }
 }
 
 export async function initDatabase(): Promise<DatabaseClient> {

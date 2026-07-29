@@ -63,7 +63,13 @@ pnpm lint       # Biome 检查
 
 ## 部署
 
-### Cloudflare Pages（推荐 ⭐）
+### Cloudflare Pages
+
+<p align="left">
+  <a href="https://dash.cloudflare.com/?to=/:account/pages/new/external?url=https://github.com/niyongsheng/duckly">
+    <img src="https://deploy.workers.cloudflare.com/button" alt="Deploy to Cloudflare Pages">
+  </a>
+</p>
 
 `public/_headers` 中的 COOP/COEP 头 Cloudflare 原生支持，SQLite WASM 开箱即用。
 

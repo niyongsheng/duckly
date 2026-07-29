@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { initAIChannel } from "../ai/channel";
 import { useI18n } from "../i18n/config";
 import BarChart from "../components/BarChart";
 import BatchOperations from "../components/BatchOperations";
@@ -26,6 +27,7 @@ export default function App() {
 
   useEffect(() => {
     loadTasks();
+    initAIChannel();
   }, [loadTasks]);
 
   return (

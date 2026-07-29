@@ -16,3 +16,17 @@ export interface AIResponse {
 }
 
 export type AIPermission = "readonly" | "readwrite";
+
+export interface DucklyAI {
+  queryTasks: (params: { status?: string; priority?: string }) => Promise<unknown>;
+  createTask: (params: Record<string, unknown>) => Promise<unknown>;
+  updateTask: (params: Record<string, unknown>) => Promise<unknown>;
+  deleteTask: (params: { id: string }) => Promise<unknown>;
+  getTags: () => Promise<unknown>;
+}
+
+declare global {
+  interface Window {
+    __DucklyAI?: DucklyAI;
+  }
+}

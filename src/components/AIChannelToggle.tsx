@@ -1,4 +1,4 @@
-import { initAIChannel, setAIPermission, setChannelActive } from "../ai/channel";
+import { setAIPermission, setChannelActive } from "../ai/channel";
 import { useI18n } from "../i18n/config";
 import { useUIStore } from "../stores/useUIStore";
 
@@ -8,9 +8,6 @@ export default function AIChannelToggle() {
 
   const handleToggle = () => {
     const newOpen = !aiChannelOpen;
-    if (newOpen) {
-      initAIChannel();
-    }
     setChannelActive(newOpen);
     setAIChannel(newOpen, aiPermission);
   };

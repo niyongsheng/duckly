@@ -15,19 +15,19 @@
 
 ## 功能
 
-| 模块 | 图标 | 描述 |
-|------|------|------|
+| 模块 | 图标 | 描述                   |
+|------|------|----------------------|
 | **日历视图** | 📅 | 月 / 周 / 日 / 年，截止日期概览 |
-| **四象限视图** | 📊 | 艾森豪威尔矩阵，事件拖拽分类 |
-| **任务列表** | 📋 | 搜索、筛选、排序、分页 |
-| **标签系统** | 🏷️ | 自定义标签管理与筛选 |
-| **批量操作** | 🗑️ | 清空已完成 / 删除全部 |
-| **Excel** | 📑 | 数据导入导出与备份 |
-| **统计面板** | 📈 | 完成率分布图表 |
-| **通知 & Webhook** | 🔔 | 截止提醒、外部推送 |
-| **AI 通道** | 🤖 | 内嵌 AI 输入通道（读写/只读） |
-| **自定义** | 🎨 | 深色模式 / 紧凑布局 |
-| **PWA** | 📲 | 离线可用，本地数据存储 |
+| **四象限视图** | 📊 | 艾森豪威尔矩阵，事件拖拽分类       |
+| **任务列表** | 📋 | 搜索、筛选、排序、分页          |
+| **标签系统** | 🏷️ | 自定义标签管理与筛选           |
+| **批量操作** | 🗑️ | 清空已完成 / 删除全部         |
+| **Excel** | 📑 | 数据导入导出与备份            |
+| **统计面板** | 📈 | 完成率分布图表              |
+| **通知 & Webhook** | 🔔 | 截止提醒、外部推送            |
+| **AI 通道** | 🤖 | 内嵌 AI 输入通道（读写/只读）    |
+| **自定义** | 🎨 | 深色模式 / 国际化           |
+| **PWA** | 📲 | 离线可用，本地数据存储          |
 
 ## AI API
 
@@ -59,6 +59,47 @@ pnpm dev        # http://localhost:5173
 pnpm build      # 构建生产版本
 pnpm preview    # 预览构建产物
 pnpm lint       # Biome 检查
+```
+
+## 部署
+
+### Cloudflare Pages（推荐 ⭐）
+
+`public/_headers` 中的 COOP/COEP 头 Cloudflare 原生支持，SQLite WASM 开箱即用。
+
+```bash
+# CLI 部署
+pnpm wrangler pages deploy dist --project-name=duckly
+```
+
+或连接 GitHub 仓库自动部署：Cloudflare Dashboard → Pages → 连接 Git 仓库 → 设置 `pnpm build` / `dist`。
+
+### Vercel
+
+需要创建 `vercel.json` 添加安全头：
+
+```json
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
+        { "key": "Cross-Origin-Embedder-Policy", "value": "require-corp" }
+      ]
+    }
+  ]
+}
+```
+
+Framework preset 选择 Vite，构建命令 `pnpm build`，输出目录 `dist`。
+
+### Docker
+
+```dockerfile
+FROM nginx:alpine
+COPY dist/ /usr/share/nginx/html
+COPY public/_headers /usr/share/nginx/html/
 ```
 
 ## 许可证

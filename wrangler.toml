@@ -1,0 +1,7 @@
+# Cloudflare Pages 配置
+# 安装: npm install -g wrangler
+# 部署: wrangler pages deploy dist --project-name=duckly
+
+name = "duckly"
+compatibility_date = "2026-07-29"
+pages_build_output_dir = "dist"

@@ -33,11 +33,20 @@ export const useTagStore = create<TagState>((set, get) => ({
       const db = await initDatabase();
       let tags = await db.getAllTags();
 
-      // Seed defaults if database is empty
-      if (tags.length === 0) {
-        for (const preset of DEFAULT_TAGS) {
+      // Ensure default tags exist (runs every time but skips existing)
+      const existingNames = new Set(tags.map((t) => t.name));
+      for (const preset of DEFAULT_TAGS) {
+        if (existingNames.has(preset.name)) continue;
+        try {
           await db.createTag(preset.name, preset.color);
+          existingNames.add(preset.name);
+        } catch {
+          // Ignore UNIQUE constraint errors
         }
+      }
+
+      // Re-fetch if we added any defaults
+      if (tags.length === 0 || tags.length < DEFAULT_TAGS.length) {
         tags = await db.getAllTags();
       }
 

@@ -177,6 +177,7 @@
   "task.name": "Task Name",
   "task.nameRequired": "Please enter a task name",
   "task.startDateRequired": "Start time is required",
+  "task.endDateRequired": "End time is required",
   "task.namePlaceholder": "Enter task name…",
   "task.descPlaceholder": "Add notes, links or description…",
   "task.quadrant": "Quadrant (Priority)",

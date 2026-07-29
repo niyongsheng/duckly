@@ -47,6 +47,7 @@ export default function TaskForm() {
   const [saving, setSaving] = useState(false);
   const [titleError, setTitleError] = useState(false);
   const [startDateError, setStartDateError] = useState(false);
+  const [endDateError, setEndDateError] = useState(false);
 
   useEffect(() => {
     if (editingTask) {
@@ -66,6 +67,8 @@ export default function TaskForm() {
       setRepeat("none");
       setSelectedTags([]);
       setTitleError(false);
+      setStartDateError(false);
+      setEndDateError(false);
     }
   }, [editingTask, showTaskForm]);
 
@@ -88,6 +91,12 @@ export default function TaskForm() {
       return;
     }
     setStartDateError(false);
+
+    if (!endDate) {
+      setEndDateError(true);
+      return;
+    }
+    setEndDateError(false);
 
     setSaving(true);
     try {
@@ -192,14 +201,20 @@ export default function TaskForm() {
             />
             <span className="time-range-sep">{t("task.to")}</span>
             <input
-              className="form-input"
+              className={`form-input${endDateError ? " input-error" : ""}`}
               type="datetime-local"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={(e) => {
+                setEndDate(e.target.value);
+                if (endDateError) setEndDateError(false);
+              }}
             />
           </div>
           {startDateError && (
             <span className="field-error">{t("task.startDateRequired")}</span>
+          )}
+          {endDateError && (
+            <span className="field-error">{t("task.endDateRequired")}</span>
           )}
         </div>
 

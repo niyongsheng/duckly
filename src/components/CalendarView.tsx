@@ -155,12 +155,12 @@ export default function CalendarView() {
   const tasks = useTaskStore((s) => s.tasks);
   const openTaskForm = useUIStore((s) => s.openTaskForm);
   const [mode, setMode] = useState<CalendarMode>("month");
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 6, 28)); // July 28, 2026
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
   const multiDayEvents = useMemo(() => deriveMultiDayEvents(tasks), [tasks]);
-  const today = useMemo(() => new Date(2026, 6, 28), []);
+  const today = useMemo(() => new Date(), []);
   const weekdaysShort = useMemo(() => [
     t("calendar.weekday.sun"), t("calendar.weekday.mon"), t("calendar.weekday.tue"),
     t("calendar.weekday.wed"), t("calendar.weekday.thu"), t("calendar.weekday.fri"),

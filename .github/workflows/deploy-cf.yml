@@ -2,8 +2,14 @@ name: Deploy to Cloudflare Pages
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
+    inputs:
+      environment:
+        description: 'Deploy environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
 
 jobs:
   deploy:

@@ -54,12 +54,18 @@ export const useTagStore = create<TagState>((set, get) => ({
   },
 
   seedDefaults: async () => {
-    const { tags } = get();
-    if (tags.length > 0) return;
+    const existing = get().tags;
+    if (existing.length > 0) return;
     for (const preset of DEFAULT_TAGS) {
+      const db = await initDatabase();
+      // Check if tag already exists by name (avoid UNIQUE constraint error)
+      const allTags = await db.getAllTags();
+      if (allTags.some((t) => t.name === preset.name)) continue;
       await get().createTag(preset.name, preset.color);
     }
-    // Reload to get consistent state
-    await get().loadTags();
+    // Re-fetch to get DB-generated state
+    const db = await initDatabase();
+    const fresh = await db.getAllTags();
+    set({ tags: fresh, loading: false });
   },
 }));

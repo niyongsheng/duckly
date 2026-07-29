@@ -17,6 +17,7 @@ import TaskForm from "../components/TaskForm";
 import ToastContainer from "../components/Toast";
 import { useToast } from "../hooks/useToast";
 import { useReminder } from "../hooks/useReminder";
+import { useTagStore } from "../stores/useTagStore";
 import { useTaskStore } from "../stores/useTaskStore";
 import { useUIStore } from "../stores/useUIStore";
 
@@ -27,10 +28,13 @@ export default function App() {
   const viewMode = useUIStore((s) => s.viewMode);
   const { toasts, removeToast } = useToast();
 
+  const loadTags = useTagStore((s) => s.loadTags);
+
   useEffect(() => {
     loadTasks();
+    loadTags();
     initAIChannel();
-  }, [loadTasks]);
+  }, [loadTasks, loadTags]);
 
   return (
     <div>

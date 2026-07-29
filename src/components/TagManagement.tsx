@@ -1,18 +1,14 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useI18n } from "../i18n/config";
 import { useTagStore } from "../stores/useTagStore";
 
 export default function TagManagement() {
   const { t } = useI18n();
   const tags = useTagStore((s) => s.tags);
-  const loadTags = useTagStore((s) => s.loadTags);
+  const loading = useTagStore((s) => s.loading);
   const createTag = useTagStore((s) => s.createTag);
   const deleteTag = useTagStore((s) => s.deleteTag);
   const [newTagName, setNewTagName] = useState("");
-
-  useEffect(() => {
-    loadTags();
-  }, [loadTags]);
 
   const handleCreate = async () => {
     const name = newTagName.trim();
@@ -54,6 +50,10 @@ export default function TagManagement() {
         {t("tag.management")}
       </h3>
       <div className="tag-group" style={{ marginBottom: "var(--space-6)" }}>
+        {loading && <span style={{ fontSize: 13, color: "var(--medium-gray)" }}>加载中...</span>}
+        {!loading && tags.length === 0 && (
+          <span style={{ fontSize: 13, color: "var(--medium-gray)" }}>暂无标签，创建第一个吧</span>
+        )}
         {tags.map((tag) => (
           <span
             key={tag.id}

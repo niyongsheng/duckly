@@ -112,6 +112,8 @@ export default function TaskForm() {
       isOpen={showTaskForm}
       onClose={closeTaskForm}
       title={editingTask ? t("task.editTitle") : t("task.formTitle")}
+      maxWidth="520px"
+      compact
     >
       <form className="task-form" onSubmit={handleSubmit}>
         {/* Title */}

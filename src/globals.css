@@ -2209,7 +2209,7 @@ body {
 .task-form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-3);
 }
 
 .task-form-row {
@@ -2256,10 +2256,10 @@ body {
 }
 
 .task-form textarea.form-input {
-  min-height: 100px;
+  min-height: 64px;
   resize: vertical;
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .task-form .priority-group {
@@ -2272,14 +2272,14 @@ body {
 .task-form .priority-btn {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
   border: var(--border-default);
   background: var(--bg-card);
   cursor: pointer;
   transition: transform var(--t);
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--dark-gray);
 }
@@ -2356,10 +2356,8 @@ body {
 .task-form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: var(--space-3);
-  padding-top: var(--space-5);
-  border-top: var(--border-default);
-  margin-top: var(--space-2);
+  gap: var(--space-2);
+  margin-top: var(--space-1);
 }
 
 .task-form-actions .btn {

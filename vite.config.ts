@@ -7,6 +7,19 @@ const base = process.env.VITE_BASE_URL || "/";
 
 export default defineConfig({
   base,
+  build: {
+    rollupOptions: {
+      output: {
+        assetFileNames: (assetInfo) => {
+          // Preserve original name so the SQLite worker can find sqlite3.wasm
+          if (assetInfo.name === "sqlite3.wasm") {
+            return "assets/[name][extname]";
+          }
+          return "assets/[name]-[hash][extname]";
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),

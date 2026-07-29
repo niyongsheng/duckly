@@ -32,24 +32,30 @@ export const useTagStore = create<TagState>((set, get) => ({
     try {
       const db = await initDatabase();
       let tags = await db.getAllTags();
+      console.log("[tags] loadTags: got", tags.length, "tags from DB");
 
       // Ensure default tags exist (runs every time but skips existing)
       const existingNames = new Set(tags.map((t) => t.name));
+      let added = 0;
       for (const preset of DEFAULT_TAGS) {
         if (existingNames.has(preset.name)) continue;
         try {
           await db.createTag(preset.name, preset.color);
           existingNames.add(preset.name);
+          added++;
         } catch {
           // Ignore UNIQUE constraint errors
         }
       }
+      console.log("[tags] loadTags: added", added, "new defaults");
 
-      // Re-fetch if we added any defaults
-      if (tags.length === 0 || tags.length < DEFAULT_TAGS.length) {
+      // Re-fetch if we added any defaults or DB was empty
+      if (added > 0 || tags.length === 0) {
         tags = await db.getAllTags();
+        console.log("[tags] loadTags: re-fetched", tags.length, "tags");
       }
 
+      console.log("[tags] loadTags: setting state with", tags.length, "tags");
       set({ tags, loading: false });
     } catch (err) {
       console.error("Failed to load tags:", err);

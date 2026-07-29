@@ -7,6 +7,8 @@ const DEFAULT_TAGS = [
   { name: "⚡ 紧急业务", color: "var(--coral)" },
   { name: "🌱 个人成长", color: "var(--yellow)" },
   { name: "📋 日常事务", color: "var(--cyan)" },
+  { name: "📦 产品需求", color: "var(--orange-primary)" },
+  { name: "📅 会议", color: "var(--pink)" },
 ];
 
 interface TagState {
@@ -16,7 +18,6 @@ interface TagState {
   loadTags: () => Promise<void>;
   createTag: (name: string, color: string) => Promise<Tag>;
   deleteTag: (id: string) => Promise<void>;
-  seedDefaults: () => Promise<void>;
 }
 
 export const useTagStore = create<TagState>((set, get) => ({
@@ -24,16 +25,23 @@ export const useTagStore = create<TagState>((set, get) => ({
   loading: false,
 
   loadTags: async () => {
+    // Don't reload if already loaded
+    if (get().tags.length > 0 && !get().loading) return;
+
     set({ loading: true });
     try {
       const db = await initDatabase();
-      const tags = await db.getAllTags();
-      set({ tags, loading: false });
+      let tags = await db.getAllTags();
 
-      // Seed defaults if empty
+      // Seed defaults if database is empty
       if (tags.length === 0) {
-        await get().seedDefaults();
+        for (const preset of DEFAULT_TAGS) {
+          await db.createTag(preset.name, preset.color);
+        }
+        tags = await db.getAllTags();
       }
+
+      set({ tags, loading: false });
     } catch (err) {
       console.error("Failed to load tags:", err);
       set({ loading: false });
@@ -51,21 +59,5 @@ export const useTagStore = create<TagState>((set, get) => ({
     const db = await initDatabase();
     await db.deleteTag(id);
     set((state) => ({ tags: state.tags.filter((t) => t.id !== id) }));
-  },
-
-  seedDefaults: async () => {
-    const existing = get().tags;
-    if (existing.length > 0) return;
-    for (const preset of DEFAULT_TAGS) {
-      const db = await initDatabase();
-      // Check if tag already exists by name (avoid UNIQUE constraint error)
-      const allTags = await db.getAllTags();
-      if (allTags.some((t) => t.name === preset.name)) continue;
-      await get().createTag(preset.name, preset.color);
-    }
-    // Re-fetch to get DB-generated state
-    const db = await initDatabase();
-    const fresh = await db.getAllTags();
-    set({ tags: fresh, loading: false });
   },
 }));

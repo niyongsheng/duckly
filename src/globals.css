@@ -1274,7 +1274,7 @@ body {
   font-weight: 700;
   color: var(--medium-gray);
   flex-shrink: 0;
-  min-width: 44px;
+  min-width: 60px;
   padding-top: 1px;
 }
 
@@ -2302,7 +2302,8 @@ body {
 }
 
 .task-form .priority-btn.active .p-dot {
-  border-color: transparent;
+  background: var(--white);
+  border-color: var(--white);
 }
 
 .task-form .priority-btn.coral.active {

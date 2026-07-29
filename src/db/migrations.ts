@@ -1,4 +1,4 @@
-import { CREATE_TABLES_SQL, MIGRATIONS_TABLE_SQL } from "./schema";
+import { CREATE_TABLES_SQL, MIGRATIONS_TABLE_SQL, NOTIFICATIONS_TABLE_SQL } from "./schema";
 
 export interface Migration {
   version: number;
@@ -27,6 +27,11 @@ const MIGRATIONS: Migration[] = [
       "  'Product Requirements', 'Meeting'",
       ");",
     ].join("\n"),
+  },
+  {
+    version: 4,
+    description: "Create notifications table",
+    sql: NOTIFICATIONS_TABLE_SQL,
   },
 ];
 

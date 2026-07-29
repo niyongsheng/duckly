@@ -1,6 +1,6 @@
 import { sqlite3Worker1Promiser } from "@sqlite.org/sqlite-wasm";
 import { runMigrations } from "./migrations";
-import type { Tag, Task, TaskCreate, TaskUpdate } from "./schema";
+import type { Tag, Task, TaskCreate, TaskUpdate, DBNotification } from "./schema";
 
 // SQLite Worker Promiser type
 type PromiserFn = (
@@ -266,6 +266,75 @@ export class DatabaseClient {
       dbId: this.dbId,
       sql: "DELETE FROM tasks",
     });
+  }
+
+  // ── Notification CRUD ──
+
+  async getAllNotifications(): Promise<DBNotification[]> {
+    return this.query<DBNotification>(
+      "SELECT * FROM notifications ORDER BY created_at DESC",
+    );
+  }
+
+  async createNotification(data: {
+    id: string;
+    taskId: string;
+    taskTitle: string;
+    type: string;
+    createdAt: string;
+  }): Promise<void> {
+    await this.promiser("exec", {
+      dbId: this.dbId,
+      sql: `INSERT INTO notifications (id, task_id, task_title, type, read, created_at)
+            VALUES ($id, $taskId, $taskTitle, $type, 0, $createdAt)`,
+      bind: {
+        $id: data.id,
+        $taskId: data.taskId,
+        $taskTitle: data.taskTitle,
+        $type: data.type,
+        $createdAt: data.createdAt,
+      },
+    });
+  }
+
+  async markNotificationRead(id: string): Promise<void> {
+    await this.promiser("exec", {
+      dbId: this.dbId,
+      sql: "UPDATE notifications SET read = 1 WHERE id = $id",
+      bind: { $id: id },
+    });
+  }
+
+  async markAllNotificationsRead(): Promise<void> {
+    await this.promiser("exec", {
+      dbId: this.dbId,
+      sql: "UPDATE notifications SET read = 1 WHERE read = 0",
+    });
+  }
+
+  async deleteAllNotifications(): Promise<void> {
+    await this.promiser("exec", {
+      dbId: this.dbId,
+      sql: "DELETE FROM notifications",
+    });
+  }
+
+  async getUnreadCount(): Promise<number> {
+    const rows = await this.query<{ "COUNT(*)": number }>(
+      "SELECT COUNT(*) FROM notifications WHERE read = 0",
+    );
+    return rows[0]?.["COUNT(*)"] ?? 0;
+  }
+
+  async hasNotification(
+    taskId: string,
+    type: string,
+  ): Promise<boolean> {
+    const rows = await this.query(
+      "SELECT 1 FROM notifications WHERE task_id = $taskId AND type = $type LIMIT 1",
+      { $taskId: taskId, $type: type },
+    );
+    return rows.length > 0;
   }
 }
 

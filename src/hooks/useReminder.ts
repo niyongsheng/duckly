@@ -1,10 +1,8 @@
 import { useEffect, useRef } from "react";
+import { fireWebhookAndLog, useNotificationStore } from "../stores/useNotificationStore";
 import { useTaskStore } from "../stores/useTaskStore";
-import {
-  useNotificationStore,
-  fireWebhook,
-} from "../stores/useNotificationStore";
 import { isDueToday, isDueTomorrow, isOverdue } from "../utils/date";
+import { playNotificationSound } from "../utils/sound";
 
 const CHECK_INTERVAL = 60_000; // 60 seconds
 
@@ -64,7 +62,11 @@ export function useReminder() {
         notifiedRef.current.add(dedupKey);
 
         // Desktop notification
-        if (toggles.taskReminder && "Notification" in window && Notification.permission === "granted") {
+        if (
+          toggles.taskReminder &&
+          "Notification" in window &&
+          Notification.permission === "granted"
+        ) {
           const messages: Record<string, string> = {
             deadline_approaching: `「${task.title}」due tomorrow`,
             deadline_due: `「${task.title}」due today`,
@@ -76,6 +78,11 @@ export function useReminder() {
           });
         }
 
+        // Sound alert
+        if (toggles.sound) {
+          playNotificationSound();
+        }
+
         // Webhook
         if (isWebhookEvent && webhookUrl && toggles.webhookPush) {
           const eventMap: Record<string, string> = {
@@ -83,7 +90,7 @@ export function useReminder() {
             deadline_due: "due",
             deadline_overdue: "due",
           };
-          fireWebhook(webhookUrl, eventMap[notifType] || "due", task);
+          fireWebhookAndLog(webhookUrl, eventMap[notifType] || "due", task);
         }
       }
     };

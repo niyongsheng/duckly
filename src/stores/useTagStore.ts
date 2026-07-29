@@ -3,10 +3,10 @@ import { initDatabase } from "../db/database";
 import type { Tag } from "../db/schema";
 
 const DEFAULT_TAGS: Array<{ name: string; color: string }> = [
-  { name: "Development", color: "var(--blue)" },
-  { name: "Urgent Business", color: "var(--coral)" },
-  { name: "Personal Growth", color: "var(--yellow)" },
-  { name: "Daily Tasks", color: "var(--cyan)" },
+  { name: "Dev", color: "var(--blue)" },
+  { name: "Urgent", color: "var(--coral)" },
+  { name: "Growth", color: "var(--yellow)" },
+  { name: "Daily", color: "var(--cyan)" },
 ];
 
 interface TagState {

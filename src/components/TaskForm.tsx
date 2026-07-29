@@ -46,6 +46,7 @@ export default function TaskForm() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [titleError, setTitleError] = useState(false);
+  const [startDateError, setStartDateError] = useState(false);
 
   useEffect(() => {
     if (editingTask) {
@@ -82,6 +83,12 @@ export default function TaskForm() {
     }
     setTitleError(false);
 
+    if (!startDate) {
+      setStartDateError(true);
+      return;
+    }
+    setStartDateError(false);
+
     setSaving(true);
     try {
       const data: TaskCreate = {
@@ -112,7 +119,7 @@ export default function TaskForm() {
       isOpen={showTaskForm}
       onClose={closeTaskForm}
       title={editingTask ? t("task.editTitle") : t("task.formTitle")}
-      maxWidth="520px"
+      maxWidth="800px"
       compact
     >
       <form className="task-form" onSubmit={handleSubmit}>
@@ -169,13 +176,19 @@ export default function TaskForm() {
 
         {/* Time Range */}
         <div>
-          <label>{t("task.timeRange")}</label>
+          <label>
+            {t("task.timeRange")}
+            <span className="required-mark">*</span>
+          </label>
           <div className="task-time-range">
             <input
-              className="form-input"
+              className={`form-input${startDateError ? " input-error" : ""}`}
               type="datetime-local"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={(e) => {
+                setStartDate(e.target.value);
+                if (startDateError) setStartDateError(false);
+              }}
             />
             <span className="time-range-sep">{t("task.to")}</span>
             <input
@@ -185,6 +198,9 @@ export default function TaskForm() {
               onChange={(e) => setEndDate(e.target.value)}
             />
           </div>
+          {startDateError && (
+            <span className="field-error">{t("task.startDateRequired")}</span>
+          )}
         </div>
 
         {/* Repeat */}

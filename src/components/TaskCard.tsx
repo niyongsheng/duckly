@@ -46,7 +46,7 @@ export default function TaskCard({ task }: TaskCardProps) {
             </span>
           )}
           {task.repeat !== "none" && (
-            <span style={{ fontSize: 11, color: "var(--medium-gray)" }}>↺ {task.repeat}</span>
+            <span style={{ fontSize: 11, color: "var(--medium-gray)" }}>↺ {t("repeat." + task.repeat)}</span>
           )}
         </div>
         <p

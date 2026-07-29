@@ -176,6 +176,7 @@
   "task.editTitle": "Edit Task",
   "task.name": "Task Name",
   "task.nameRequired": "Please enter a task name",
+  "task.startDateRequired": "Start time is required",
   "task.namePlaceholder": "Enter task name…",
   "task.descPlaceholder": "Add notes, links or description…",
   "task.quadrant": "Quadrant (Priority)",
@@ -236,6 +237,14 @@
   "webhook.eventDone": "Task Done",
   "webhook.eventCreate": "Task Created",
   "webhook.eventChange": "Deadline Changed",
+  "webhook.eventDelete": "Task Deleted",
+
+  "settings.webhookSaveTest": "Save",
+  "settings.webhookLogs": "Logs",
+  "settings.webhookLogsDesc": "View recent webhook deliveries",
+  "settings.webhookLogsEmpty": "No deliveries yet",
+  "settings.webhookLogsCleared": "Delivery history cleared",
+  "settings.webhookLogsClear": "Clear",
 
   "settings.notifTaskReminder": "Task Reminder",
   "settings.notifDeadlinePush": "Deadline Push",

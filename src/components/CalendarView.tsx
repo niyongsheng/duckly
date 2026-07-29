@@ -74,6 +74,54 @@ function priorityToEventColor(priority: string): MultiDayEvent["color"] {
   }
 }
 
+/** Check if a task is a multi-day event (startDate and dueDate on different calendar days) */
+function isMultiDayEvent(task: Task): boolean {
+  if (!task.startDate || !task.dueDate) return false;
+  const start = new Date(task.startDate);
+  const end = new Date(task.dueDate);
+  // Compare date portions only (strip time)
+  const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+  const diffDays = Math.round((endDay.getTime() - startDay.getTime()) / (1000 * 60 * 60 * 24));
+  return diffDays >= 1;
+}
+
+/** Get non-multi-day tasks for a given date key (used for calendar cell dots) */
+function getSingleDayTasks(tasks: Task[], dateKey: string): Task[] {
+  return tasks.filter((t) => {
+    if (!t.dueDate || isMultiDayEvent(t)) return false;
+    const d = new Date(t.dueDate);
+    const taskKey = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+    return taskKey === dateKey;
+  });
+}
+
+/** Get all tasks relevant to a date key, including multi-day events that span it (used for sidebar) */
+function getTasksForDateSpan(tasks: Task[], dateKey: string): Task[] {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  const target = new Date(y, m - 1, d);
+
+  return tasks.filter((t) => {
+    if (!t.startDate && !t.dueDate) return false;
+
+    if (isMultiDayEvent(t)) {
+      // Multi-day event: check if target date is within start~end range (inclusive)
+      const start = new Date(t.startDate as string);
+      const end = new Date(t.dueDate as string);
+      const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+      const targetDay = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+      return targetDay >= startDay && targetDay <= endDay;
+    }
+
+    // Single-day task: match by dueDate
+    if (!t.dueDate) return false;
+    const dd = new Date(t.dueDate);
+    const taskKey = `${dd.getFullYear()}-${dd.getMonth() + 1}-${dd.getDate()}`;
+    return taskKey === dateKey;
+  });
+}
+
 /** Derive multi-day events from tasks that have both startDate and dueDate on different days */
 function deriveMultiDayEvents(tasks: Task[]): MultiDayEvent[] {
   return tasks
@@ -178,7 +226,7 @@ export default function CalendarView() {
   const selectedDateKey = selectedDate
     ? formatDateKey(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate())
     : "";
-  const selectedTasks = selectedDate ? getTasksForDateKey(tasks, selectedDateKey) : [];
+  const selectedTasks = selectedDate ? getTasksForDateSpan(tasks, selectedDateKey) : [];
 
   // ── Multi-day overlay effect (month view) ──
   useEffect(() => {
@@ -467,7 +515,7 @@ export default function CalendarView() {
                 ))}
                 {monthDays.map((d) => {
                   const dateKey = formatDateKey(d.getFullYear(), d.getMonth(), d.getDate());
-                  const dayTasks = getTasksForDateKey(tasks, dateKey);
+                  const dayTasks = getSingleDayTasks(tasks, dateKey);
                   const isOtherMonth = d.getMonth() !== currentDate.getMonth();
                   const isTodayDate = isSameDay(d, today);
                   const isSelectedDate = selectedDate && isSameDay(d, selectedDate);
@@ -561,7 +609,7 @@ export default function CalendarView() {
                   </div>
                   {weekDays.map((d, di) => {
                     const dateKey = formatDateKey(d.getFullYear(), d.getMonth(), d.getDate());
-                    const dayTasks = getTasksForDateKey(tasks, dateKey);
+                    const dayTasks = getSingleDayTasks(tasks, dateKey);
                     return (
                       <div
                         key={`c-${h}-${di}`}
@@ -683,7 +731,7 @@ export default function CalendarView() {
                       ))}
                       {days.map((d) => {
                         const key = formatDateKey(d.getFullYear(), d.getMonth(), d.getDate());
-                        const dayTasks = getTasksForDateKey(tasks, key);
+                        const dayTasks = getSingleDayTasks(tasks, key);
                         const isTodayDate = isSameDay(d, today);
                         const color = dayTasks.length > 0 ? getPriorityColor(dayTasks[0]) : "";
                         return (
@@ -780,13 +828,16 @@ function CalendarSidebar({
                 className="cal-sidebar-task-item"
                 style={{ opacity: task.status === "done" ? 0.6 : 1 }}
               >
-                <span className="cal-sidebar-time">
-                  {task.dueDate
-                    ? new Date(task.dueDate).toLocaleTimeString("zh-CN", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
-                    : t("calendar.allDay")}
+                <span className="cal-sidebar-time" style={{ lineHeight: 1.4 }}>
+                  {isMultiDayEvent(task)
+                    ? <>
+                        {new Date(task.startDate!).toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" })} {new Date(task.startDate!).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}
+                        <br />
+                        {new Date(task.dueDate!).toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" })} {new Date(task.dueDate!).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}
+                      </>
+                    : task.dueDate
+                      ? new Date(task.dueDate).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })
+                      : t("calendar.allDay")}
                 </span>
                 <div className="cal-sidebar-task-info">
                   <div

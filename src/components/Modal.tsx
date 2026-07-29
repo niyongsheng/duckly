@@ -60,7 +60,7 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = "11
             <div
               className="sticky top-0 z-10 flex items-center justify-between"
               style={{
-                padding: compact ? "var(--space-4) var(--space-5)" : "var(--space-8) var(--space-8) var(--space-6)",
+                padding: compact ? "var(--space-3) var(--space-4)" : "var(--space-8) var(--space-8) var(--space-6)",
                 background: "var(--bg-card)",
                 borderBottom: "var(--border-default)",
               }}

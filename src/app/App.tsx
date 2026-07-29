@@ -19,6 +19,7 @@ import { useToast } from "../hooks/useToast";
 import { useReminder } from "../hooks/useReminder";
 import { useTagStore } from "../stores/useTagStore";
 import { useTaskStore } from "../stores/useTaskStore";
+import { useNotificationStore } from "../stores/useNotificationStore";
 import { useUIStore } from "../stores/useUIStore";
 
 export default function App() {
@@ -29,13 +30,15 @@ export default function App() {
   const { toasts, removeToast } = useToast();
 
   const loadTags = useTagStore((s) => s.loadTags);
+  const loadNotifications = useNotificationStore((s) => s.loadNotifications);
 
   useEffect(() => {
     loadTasks();
     loadTags();
+    loadNotifications();
     initAIChannel();
 
-  }, [loadTasks, loadTags]);
+  }, [loadTasks, loadTags, loadNotifications]);
 
   return (
     <div>

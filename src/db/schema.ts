@@ -101,3 +101,28 @@ CREATE TABLE IF NOT EXISTS _migrations (
   applied_at TEXT NOT NULL
 );
 `;
+
+export const NOTIFICATIONS_TABLE_SQL = `
+CREATE TABLE IF NOT EXISTS notifications (
+  id TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL,
+  task_title TEXT NOT NULL,
+  type TEXT NOT NULL CHECK(type IN (
+    'deadline_approaching','deadline_due','deadline_overdue',
+    'task_completed','task_created','deadline_changed'
+  )),
+  read INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read);
+CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at DESC);
+`;
+
+export interface DBNotification {
+  id: string;
+  task_id: string;
+  task_title: string;
+  type: string;
+  read: number;
+  created_at: string;
+}

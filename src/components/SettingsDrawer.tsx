@@ -1,13 +1,14 @@
-import { useEffect, useRef } from "react";
-import { useI18n } from "../i18n/config";
+import { useEffect, useRef, useState } from "react";
+import { useConfirm } from "../hooks/useConfirm";
+import { useExcel } from "../hooks/useExcel";
 import { usePWA } from "../hooks/usePWA";
 import { useToast } from "../hooks/useToast";
-import { useExcel } from "../hooks/useExcel";
-import { useUIStore } from "../stores/useUIStore";
-import { useTaskStore } from "../stores/useTaskStore";
+import { useI18n } from "../i18n/config";
+import type { NotifToggle, WebhookEvent } from "../stores/useNotificationStore";
 import { useNotificationStore } from "../stores/useNotificationStore";
-import { useConfirm } from "../hooks/useConfirm";
-import type { WebhookEvent, NotifToggle } from "../stores/useNotificationStore";
+import { useTaskStore } from "../stores/useTaskStore";
+import { useUIStore } from "../stores/useUIStore";
+import { isValidUrl } from "../utils/validation";
 
 export default function SettingsDrawer() {
   const { t } = useI18n();
@@ -23,7 +24,11 @@ export default function SettingsDrawer() {
     testWebhook,
     deleteWebhook,
     clearAll: clearAllNotifications,
+    webhookLogs,
+    clearWebhookLogs,
   } = useNotificationStore();
+  const [testing, setTesting] = useState(false);
+  const [showLogs, setShowLogs] = useState(false);
   const { canInstall, installApp } = usePWA();
   const importInputRef = useRef<HTMLInputElement>(null);
   const [confirm, ConfirmDialog] = useConfirm();
@@ -102,7 +107,6 @@ export default function SettingsDrawer() {
           <div className="drawer-section">
             <div className="drawer-section-title">{t("settings.integration")}</div>
 
-
             {/* Webhook */}
             <div className="drawer-item" style={{ cursor: "default", flexWrap: "wrap" }}>
               <div className="drawer-item-icon">
@@ -133,42 +137,79 @@ export default function SettingsDrawer() {
                   }}
                 />
                 <div className="webhook-event-grid">
-                  {(["due", "done", "create", "change"] as WebhookEvent[]).map((event) => (
-                    <div
-                      key={event}
-                      className={`webhook-event-item ${settings.webhookEvents[event] ? "active" : ""}`}
-                      onClick={() => toggleWebhookEvent(event)}
-                    >
-                      <input type="checkbox" name={"webhook-" + event} checked={settings.webhookEvents[event]} readOnly />
-                      {t("webhook.event" + event.charAt(0).toUpperCase() + event.slice(1))}
-                    </div>
-                  ))}
+                  {(["due", "done", "create", "change", "delete"] as WebhookEvent[]).map(
+                    (event) => (
+                      <div
+                        key={event}
+                        className={`webhook-event-item ${settings.webhookEvents[event] ? "active" : ""}`}
+                        onClick={() => toggleWebhookEvent(event)}
+                      >
+                        <input
+                          type="checkbox"
+                          name={"webhook-" + event}
+                          checked={settings.webhookEvents[event]}
+                          readOnly
+                        />
+                        {t("webhook.event" + event.charAt(0).toUpperCase() + event.slice(1))}
+                      </div>
+                    ),
+                  )}
                 </div>
                 <div className="webhook-actions">
                   <button
                     className="btn btn-small btn-primary"
-                    onClick={() => {
-                      if (settings.webhookUrl && settings.webhookUrl.startsWith("http")) {
-                        const events = Object.entries(settings.webhookEvents)
-                          .filter(([, v]) => v)
-                          .map(([k]) => t("webhook.event" + k.charAt(0).toUpperCase() + k.slice(1)))
-                          .join(", ");
-                        showToast(`${t("settings.webhookSaved")} · ${events}`, "success");
-                      } else {
-                        showToast("请填写有效的 Webhook URL（以 http 开头）", "error");
+                    onClick={async () => {
+                      if (!settings.webhookUrl) {
+                        showToast("Please enter a webhook URL", "error");
+                        return;
                       }
+                      if (!isValidUrl(settings.webhookUrl)) {
+                        showToast(
+                          "Invalid URL format (must start with http:// or https://)",
+                          "error",
+                        );
+                        return;
+                      }
+                      setTesting(true);
+                      const ok = await testWebhook();
+                      setTesting(false);
+                      showToast(
+                        ok
+                          ? `${t("settings.webhookTested")} (HTTP 200)`
+                          : "Webhook test failed — check the URL or try again",
+                        ok ? "success" : "error",
+                      );
                     }}
                   >
-                    {t("settings.webhookSave")}
+                    {testing ? "Sending…" : t("settings.webhookSaveTest")}
                   </button>
                   <button
                     className="btn btn-small"
                     onClick={async () => {
+                      if (!settings.webhookUrl) {
+                        showToast("Please enter a webhook URL first", "warning");
+                        return;
+                      }
+                      if (!isValidUrl(settings.webhookUrl)) {
+                        showToast("Invalid URL format", "error");
+                        return;
+                      }
                       const ok = await testWebhook();
-                      showToast(ok ? t("settings.webhookTested") : "Test failed", ok ? "success" : "error");
+                      showToast(
+                        ok ? `${t("settings.webhookTested")} (HTTP 200)` : "Webhook test failed",
+                        ok ? "success" : "error",
+                      );
                     }}
                   >
                     {t("settings.webhookTest")}
+                  </button>
+                  <button
+                    className="btn btn-small"
+                    onClick={() => setShowLogs(!showLogs)}
+                    disabled={webhookLogs.length === 0}
+                  >
+                    {t("settings.webhookLogs")}
+                    {webhookLogs.length > 0 ? ` (${webhookLogs.length})` : ""}
                   </button>
                   <button
                     className="btn btn-small btn-danger"
@@ -180,6 +221,81 @@ export default function SettingsDrawer() {
                     {t("settings.webhookDelete")}
                   </button>
                 </div>
+                {showLogs && (
+                  <div style={{ marginTop: 8, paddingLeft: 44 }}>
+                    <div className="drawer-section-title" style={{ fontSize: 12, marginBottom: 6 }}>
+                      {t("settings.webhookLogs")}
+                    </div>
+                    {webhookLogs.length === 0 ? (
+                      <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>
+                        {t("settings.webhookLogsEmpty")}
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ maxHeight: 200, overflowY: "auto", marginBottom: 6 }}>
+                          {webhookLogs.map((log) => (
+                            <div
+                              key={log.id}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 6,
+                                fontSize: 11,
+                                padding: "3px 0",
+                                borderBottom: "1px solid var(--border-light)",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  width: 6,
+                                  height: 6,
+                                  borderRadius: "50%",
+                                  background: log.success ? "var(--green)" : "var(--coral)",
+                                  flexShrink: 0,
+                                }}
+                              />
+                              <span
+                                style={{ color: "var(--text-secondary)", whiteSpace: "nowrap" }}
+                              >
+                                {new Date(log.timestamp).toLocaleTimeString()}
+                              </span>
+                              <span style={{ fontWeight: 500 }}>{log.event}</span>
+                              <span
+                                style={{
+                                  color: "var(--text-secondary)",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                  flex: 1,
+                                }}
+                              >
+                                {log.taskTitle}
+                              </span>
+                              <span
+                                style={{
+                                  color: log.success ? "var(--green)" : "var(--coral)",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {log.success ? "✓" : "✗"}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        <button
+                          className="btn btn-small"
+                          onClick={() => {
+                            clearWebhookLogs();
+                            showToast(t("settings.webhookLogsCleared"), "success");
+                          }}
+                          style={{ fontSize: 11 }}
+                        >
+                          {t("settings.webhookLogsClear")}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -213,9 +329,24 @@ export default function SettingsDrawer() {
             >
               <div className="drawer-item-icon">
                 <svg className="icon icon-18" viewBox="0 0 24 24" fill="none">
-                  <path d="M6 4h10l4 4v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-                  <path d="M16 4v4h4" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-                  <path d="M8 12h8M8 16h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  <path
+                    d="M6 4h10l4 4v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M16 4v4h4"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M8 12h8M8 16h5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
                 </svg>
               </div>
               <div className="drawer-item-content">
@@ -304,13 +435,15 @@ export default function SettingsDrawer() {
           {/* Notifications */}
           <div className="drawer-section">
             <div className="drawer-section-title">{t("settings.notifications")}</div>
-            {([
-              { key: "taskReminder", label: t("settings.notifTaskReminder") },
-              { key: "deadlinePush", label: t("settings.notifDeadlinePush") },
-              { key: "sound", label: t("settings.notifSound") },
-              { key: "webhookPush", label: t("settings.notifWebhook") },
-              { key: "preRemind", label: t("settings.notifPreRemind") },
-            ] as Array<{ key: NotifToggle; label: string }>).map((item) => (
+            {(
+              [
+                { key: "taskReminder", label: t("settings.notifTaskReminder") },
+                { key: "deadlinePush", label: t("settings.notifDeadlinePush") },
+                { key: "sound", label: t("settings.notifSound") },
+                { key: "webhookPush", label: t("settings.notifWebhook") },
+                { key: "preRemind", label: t("settings.notifPreRemind") },
+              ] as Array<{ key: NotifToggle; label: string }>
+            ).map((item) => (
               <div key={item.key} className="drawer-toggle-group">
                 <span className="drawer-toggle-label">{item.label}</span>
                 <div

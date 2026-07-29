@@ -1,7 +1,9 @@
 import { create } from "zustand";
 import { initDatabase } from "../db/database";
 import type { Task, TaskCreate, TaskUpdate } from "../db/schema";
-import { useNotificationStore, fireWebhook } from "./useNotificationStore";
+import { computeNextOccurrence } from "../utils/recurrence";
+import { playNotificationSound } from "../utils/sound";
+import { fireWebhookAndLog, useNotificationStore } from "./useNotificationStore";
 
 interface TaskStats {
   total: number;
@@ -47,12 +49,13 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     const db = await initDatabase();
     const task = await db.createTask(data);
     set((state) => ({ tasks: [task, ...state.tasks] }));
-    // Fire notification + webhook
+    // Fire notification + sound + webhook
     const ns = useNotificationStore.getState();
     ns.addNotification(task.id, task.title, "task_created");
+    if (ns.settings.toggles.sound) playNotificationSound();
     const { webhookUrl, webhookEvents, toggles } = ns.settings;
     if (webhookUrl && toggles.webhookPush && webhookEvents.create) {
-      fireWebhook(webhookUrl, "create", task);
+      fireWebhookAndLog(webhookUrl, "create", task);
     }
     return task;
   },
@@ -82,15 +85,25 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       if (task) {
         const ns = useNotificationStore.getState();
         ns.addNotification(task.id, task.title, "deadline_changed");
+        if (ns.settings.toggles.sound) playNotificationSound();
         const { webhookUrl, webhookEvents, toggles } = ns.settings;
         if (webhookUrl && toggles.webhookPush && webhookEvents.change) {
-          fireWebhook(webhookUrl, "change", task);
+          fireWebhookAndLog(webhookUrl, "change", task);
         }
       }
     }
   },
 
   deleteTask: async (id: string) => {
+    // Capture task snapshot before deletion for webhook
+    const task = get().tasks.find((t) => t.id === id);
+    if (task) {
+      const ns = useNotificationStore.getState();
+      const { webhookUrl, webhookEvents, toggles } = ns.settings;
+      if (webhookUrl && toggles.webhookPush && webhookEvents.delete) {
+        fireWebhookAndLog(webhookUrl, "delete", task);
+      }
+    }
     const db = await initDatabase();
     await db.deleteTask(id);
     set((state) => ({ tasks: state.tasks.filter((t) => t.id !== id) }));
@@ -109,13 +122,22 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     await get().updateTask(id, { status: newStatus });
     // Fire notification + webhook when task is completed
     if (newStatus === "done") {
+      // Recurring task: create next occurrence
+      if (task.repeat !== "none") {
+        const nextData = computeNextOccurrence(task);
+        if (nextData) {
+          await get().addTask(nextData);
+        }
+      }
+
       const updated = get().tasks.find((t) => t.id === id);
       if (updated) {
         const ns = useNotificationStore.getState();
         ns.addNotification(updated.id, updated.title, "task_completed");
+        if (ns.settings.toggles.sound) playNotificationSound();
         const { webhookUrl, webhookEvents, toggles } = ns.settings;
         if (webhookUrl && toggles.webhookPush && webhookEvents.done) {
-          fireWebhook(webhookUrl, "done", updated);
+          fireWebhookAndLog(webhookUrl, "done", updated);
         }
       }
     }

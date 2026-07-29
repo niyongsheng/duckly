@@ -176,6 +176,7 @@
   "task.editTitle": "编辑任务",
   "task.name": "任务名称",
   "task.nameRequired": "请输入任务名称",
+  "task.startDateRequired": "请选择开始时间",
   "task.namePlaceholder": "输入任务名称…",
   "task.descPlaceholder": "添加备注、链接或说明…",
   "task.quadrant": "所属象限（优先级）",
@@ -236,6 +237,14 @@
   "webhook.eventDone": "任务完成",
   "webhook.eventCreate": "任务创建",
   "webhook.eventChange": "截止变更",
+  "webhook.eventDelete": "任务删除",
+
+  "settings.webhookSaveTest": "保存",
+  "settings.webhookLogs": "日志",
+  "settings.webhookLogsDesc": "查看最近 webhook 投递记录",
+  "settings.webhookLogsEmpty": "暂无投递记录",
+  "settings.webhookLogsCleared": "投递历史已清空",
+  "settings.webhookLogsClear": "清空",
 
   "settings.notifTaskReminder": "任务提醒",
   "settings.notifDeadlinePush": "截止日期推送",

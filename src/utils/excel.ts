@@ -8,6 +8,7 @@ const EXPORT_HEADERS = [
   "Status",
   "Tags",
   "Due Date",
+  "Start Date",
   "Repeat",
   "Created At",
 ];
@@ -20,6 +21,7 @@ function taskToRow(task: Task): (string | number | boolean)[] {
     task.status,
     task.tags.join(", "),
     task.dueDate ?? "",
+    task.startDate ?? "",
     task.repeat,
     task.createdAt,
   ];
@@ -35,7 +37,8 @@ function rowToTask(row: (string | number | boolean)[]): TaskCreate {
       .map((t) => t.trim())
       .filter(Boolean),
     dueDate: String(row[5] ?? "") || undefined,
-    repeat: (String(row[6]) ?? "none") as TaskCreate["repeat"],
+    startDate: String(row[6] ?? "") || undefined,
+    repeat: (String(row[7]) ?? "none") as TaskCreate["repeat"],
   };
 }
 
@@ -50,9 +53,10 @@ export function exportTasksToExcel(tasks: Task[]): void {
     { wch: 25 },
     { wch: 15 },
     { wch: 20 },
-    { wch: 15 },
+    { wch: 22 },
+    { wch: 22 },
     { wch: 10 },
-    { wch: 20 },
+    { wch: 22 },
   ];
 
   XLSX.utils.book_append_sheet(wb, ws, "Tasks");
@@ -94,7 +98,8 @@ export function downloadTemplate(): void {
       "urgent-important",
       "todo",
       "work, personal",
-      "2025-12-31",
+      "2025-12-31T14:30",
+      "2025-12-30T09:00",
       "none",
       new Date().toISOString(),
     ],
@@ -106,9 +111,10 @@ export function downloadTemplate(): void {
     { wch: 25 },
     { wch: 15 },
     { wch: 20 },
-    { wch: 15 },
+    { wch: 22 },
+    { wch: 22 },
     { wch: 10 },
-    { wch: 20 },
+    { wch: 22 },
   ];
 
   XLSX.utils.book_append_sheet(wb, ws, "Tasks");

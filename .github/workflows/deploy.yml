@@ -79,14 +79,17 @@ jobs:
         id: changelog
         run: |
           PREV_TAG=$(git tag --sort=-v:refname | head -2 | tail -1)
+          echo "prev_tag=${PREV_TAG:-}" >> "$GITHUB_OUTPUT"
           if [ -z "$PREV_TAG" ]; then
             LOG=$(git log --pretty=format:"* %s" --no-merges)
           else
             LOG=$(git log "$PREV_TAG"..HEAD --pretty=format:"* %s" --no-merges)
           fi
-          echo "NOTES<<EOF" >> $GITHUB_ENV
-          echo "$LOG" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          {
+            echo "notes<<EOF"
+            echo "$LOG"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -96,8 +99,8 @@ jobs:
           body: |
             ## What's Changed
 
-            ${{ env.NOTES }}
+            ${{ steps.changelog.outputs.notes }}
 
-            **Full Changelog:** https://github.com/${{ github.repository }}/compare/${{ env.PREV_TAG }}...${{ github.ref_name }}
+            **Full Changelog:** https://github.com/${{ github.repository }}/compare/${{ steps.changelog.outputs.prev_tag }}...${{ github.ref_name }}
           prerelease: false
           make_latest: true

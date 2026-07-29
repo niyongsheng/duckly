@@ -1,12 +1,29 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useI18n } from "../i18n/config";
 import { usePWA } from "../hooks/usePWA";
+import { useToast } from "../hooks/useToast";
+import { useExcel } from "../hooks/useExcel";
 import { useUIStore } from "../stores/useUIStore";
+import { useTaskStore } from "../stores/useTaskStore";
+import { useNotificationStore } from "../stores/useNotificationStore";
+import type { WebhookEvent, NotifToggle } from "../stores/useNotificationStore";
 
 export default function SettingsDrawer() {
   const { t } = useI18n();
   const { showSettings, closeSettings, darkMode, setDarkMode } = useUIStore();
+  const { showToast } = useToast();
+  const { exportTasks, importTasks, download: downloadTemplate } = useExcel();
+  const deleteAllTasks = useTaskStore((s) => s.deleteAllTasks);
+  const {
+    settings,
+    setWebhookUrl,
+    toggleWebhookEvent,
+    setToggle,
+    testWebhook,
+    deleteWebhook,
+  } = useNotificationStore();
   const { canInstall, installApp } = usePWA();
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   // Sync dark mode with document
   useEffect(() => {
@@ -50,7 +67,7 @@ export default function SettingsDrawer() {
                 strokeWidth="2"
               />
             </svg>
-            设置
+            {t("settings.title")}
           </div>
           <button className="drawer-close" onClick={closeSettings}>
             <svg className="icon icon-18" viewBox="0 0 24 24" fill="none">
@@ -67,160 +84,20 @@ export default function SettingsDrawer() {
         <div className="drawer-body">
           {/* Appearance */}
           <div className="drawer-section">
-            <div className="drawer-section-title">外观</div>
+            <div className="drawer-section-title">{t("settings.appearance")}</div>
             <div className="drawer-toggle-group">
-              <span className="drawer-toggle-label">深色模式</span>
+              <span className="drawer-toggle-label">{t("settings.darkMode")}</span>
               <div
                 className={`drawer-toggle ${darkMode ? "on" : ""}`}
                 onClick={() => setDarkMode(!darkMode)}
-              />
-            </div>
-            <div className="drawer-toggle-group">
-              <span className="drawer-toggle-label">紧凑布局</span>
-              <div
-                className="drawer-toggle"
-                onClick={(e) => e.currentTarget.classList.toggle("on")}
               />
             </div>
           </div>
 
           {/* Integration */}
           <div className="drawer-section">
-            <div className="drawer-section-title">集成</div>
+            <div className="drawer-section-title">{t("settings.integration")}</div>
 
-            {/* Excel */}
-            <div className="drawer-item" style={{ cursor: "default", flexWrap: "wrap" }}>
-              <div className="drawer-item-icon">
-                <svg className="icon icon-18" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M6 4h10l4 4v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M16 4v4h4"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M8 12h8M8 16h5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </div>
-              <div className="drawer-item-content">
-                <div className="drawer-item-label">Excel 导入/导出</div>
-                <div className="drawer-item-desc">导入任务、导出备份、下载模板</div>
-              </div>
-              <div
-                style={{ display: "flex", gap: 6, width: "100%", marginTop: 8, paddingLeft: 44 }}
-              >
-                <span
-                  className="tag tag-pill"
-                  style={{
-                    background: "var(--blue)",
-                    cursor: "pointer",
-                    flex: 1,
-                    textAlign: "center",
-                  }}
-                >
-                  导入
-                </span>
-                <span
-                  className="tag tag-pill"
-                  style={{
-                    background: "var(--cyan)",
-                    cursor: "pointer",
-                    flex: 1,
-                    textAlign: "center",
-                  }}
-                >
-                  导出
-                </span>
-                <span
-                  className="tag tag-pill"
-                  style={{
-                    background: "var(--bg-card)",
-                    cursor: "pointer",
-                    flex: 1,
-                    textAlign: "center",
-                  }}
-                >
-                  模板
-                </span>
-              </div>
-            </div>
-
-            {/* AI */}
-            <div className="drawer-item" style={{ cursor: "default", flexWrap: "wrap" }}>
-              <div className="drawer-item-icon">
-                <svg className="icon icon-18" viewBox="0 0 24 24" fill="none">
-                  <rect
-                    x="4"
-                    y="4"
-                    width="16"
-                    height="16"
-                    rx="3"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  />
-                  <path
-                    d="M9 8v8M12 8v8M15 8v8"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                  <path d="M8 12h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              </div>
-              <div className="drawer-item-content">
-                <div className="drawer-item-label">AI 接口</div>
-                <div className="drawer-item-desc">读写模式 · 只读模式 · 关闭</div>
-              </div>
-              <div
-                style={{ display: "flex", gap: 6, width: "100%", marginTop: 8, paddingLeft: 44 }}
-              >
-                <span
-                  className="tag tag-pill"
-                  style={{
-                    background: "var(--blue)",
-                    cursor: "pointer",
-                    flex: 1,
-                    textAlign: "center",
-                  }}
-                >
-                  读写
-                </span>
-                <span
-                  className="tag tag-pill"
-                  style={{
-                    background: "var(--bg-card)",
-                    cursor: "pointer",
-                    flex: 1,
-                    textAlign: "center",
-                  }}
-                >
-                  只读
-                </span>
-                <span
-                  className="tag tag-pill"
-                  style={{
-                    background: "var(--coral)",
-                    color: "var(--white)",
-                    borderColor: "var(--coral)",
-                    cursor: "pointer",
-                    flex: 1,
-                    textAlign: "center",
-                  }}
-                >
-                  关闭
-                </span>
-              </div>
-            </div>
 
             {/* Webhook */}
             <div className="drawer-item" style={{ cursor: "default", flexWrap: "wrap" }}>
@@ -235,136 +112,121 @@ export default function SettingsDrawer() {
                 </svg>
               </div>
               <div className="drawer-item-content">
-                <div className="drawer-item-label">Webhook 到期通知</div>
-                <div className="drawer-item-desc">任务截止时自动推送通知到外部服务</div>
+                <div className="drawer-item-label">{t("settings.webhook")}</div>
+                <div className="drawer-item-desc">{t("settings.webhookDesc")}</div>
               </div>
               <div style={{ width: "100%", marginTop: 8, paddingLeft: 44 }}>
                 <input
                   className="form-input"
                   placeholder="https://hooks.example.com/notify"
-                  defaultValue="https://hooks.example.com/duckly-hook"
+                  value={settings.webhookUrl}
+                  onChange={(e) => setWebhookUrl(e.target.value)}
                   style={{
                     fontSize: 13,
                     padding: "var(--space-2) var(--space-3)",
                     marginBottom: "var(--space-2)",
                   }}
                 />
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: 4,
-                    marginBottom: "var(--space-2)",
-                  }}
-                >
-                  {[
-                    { key: "webhook.eventDue", color: "var(--coral)", active: true },
-                    { key: "webhook.eventDone", color: "var(--blue)", active: true },
-                    { key: "webhook.eventCreate", color: "var(--yellow)", active: false },
-                    { key: "webhook.eventChange", color: "var(--cyan)", active: true },
-                  ].map((item) => (
+                <div className="webhook-event-grid">
+                  {(["due", "done", "create", "change"] as WebhookEvent[]).map((event) => (
                     <div
-                      key={item.key}
-                      className="tag tag-pill"
-                      style={{
-                        fontSize: 11,
-                        cursor: "pointer",
-                        background: item.active ? item.color : "transparent",
-                        borderColor: item.active ? "var(--dark-gray)" : "var(--light-gray)",
-                        textAlign: "center",
-                      }}
+                      key={event}
+                      className={`webhook-event-item ${settings.webhookEvents[event] ? "active" : ""}`}
+                      onClick={() => toggleWebhookEvent(event)}
                     >
-                      {t(item.key)}
+                      <input type="checkbox" checked={settings.webhookEvents[event]} readOnly />
+                      {t("webhook.event" + event.charAt(0).toUpperCase() + event.slice(1))}
                     </div>
                   ))}
                 </div>
-                <div style={{ display: "flex", gap: 6 }}>
-                  <button className="btn btn-small btn-primary" style={{ flex: 1, fontSize: 11 }}>
-                    保存
+                <div className="webhook-actions">
+                  <button
+                    className="btn btn-small btn-primary"
+                    onClick={() => {
+                      if (settings.webhookUrl && settings.webhookUrl.startsWith("http")) {
+                        showToast(t("settings.webhookSaved"), "success");
+                      } else {
+                        showToast("Invalid URL", "error");
+                      }
+                    }}
+                  >
+                    {t("settings.webhookSave")}
                   </button>
-                  <button className="btn btn-small" style={{ flex: 1, fontSize: 11 }}>
-                    测试
+                  <button
+                    className="btn btn-small"
+                    onClick={async () => {
+                      const ok = await testWebhook();
+                      showToast(ok ? t("settings.webhookTested") : "Test failed", ok ? "success" : "error");
+                    }}
+                  >
+                    {t("settings.webhookTest")}
                   </button>
-                  <button className="btn btn-small btn-danger" style={{ flex: 1, fontSize: 11 }}>
-                    删除
+                  <button
+                    className="btn btn-small btn-danger"
+                    onClick={() => {
+                      deleteWebhook();
+                      showToast(t("settings.webhookDeleted"), "warning");
+                    }}
+                  >
+                    {t("settings.webhookDelete")}
                   </button>
                 </div>
               </div>
-            </div>
-
-            {/* Logs */}
-            <div className="drawer-item">
-              <div className="drawer-item-icon">
-                <svg className="icon icon-18" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M9 12h6M12 9v6"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </div>
-              <div className="drawer-item-content">
-                <div className="drawer-item-label">查看调用日志</div>
-                <div className="drawer-item-desc">AI 接口的请求与响应记录</div>
-              </div>
-              <div className="drawer-item-right">→</div>
-            </div>
-
-            {/* API Docs */}
-            <div className="drawer-item">
-              <div className="drawer-item-icon">
-                <svg className="icon icon-18" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-                  <path
-                    d="M12 8v4M12 16h0"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </div>
-              <div className="drawer-item-content">
-                <div className="drawer-item-label">接口协议文档</div>
-                <div className="drawer-item-desc">查看 API 文档和接入说明</div>
-              </div>
-              <div className="drawer-item-right">→</div>
             </div>
           </div>
 
           {/* Data Management */}
           <div className="drawer-section">
-            <div className="drawer-section-title">数据管理</div>
-            <div className="drawer-item">
+            <div className="drawer-section-title">{t("settings.data")}</div>
+            <input
+              ref={importInputRef}
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              style={{ display: "none" }}
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                try {
+                  const count = await importTasks(file);
+                  showToast(`成功导入 ${count} 个任务`, "success");
+                } catch (err) {
+                  showToast(`导入失败: ${(err as Error).message}`, "error");
+                }
+                e.target.value = "";
+              }}
+            />
+            <div
+              className="drawer-item"
+              onClick={() => {
+                importInputRef.current?.click();
+              }}
+              style={{ cursor: "pointer" }}
+            >
               <div className="drawer-item-icon">
                 <svg className="icon icon-18" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M6 4h10l4 4v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M16 4v4h4"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M8 12h8M8 16h5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
+                  <path d="M6 4h10l4 4v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                  <path d="M16 4v4h4" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                  <path d="M8 12h8M8 16h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
               </div>
               <div className="drawer-item-content">
-                <div className="drawer-item-label">导入数据</div>
-                <div className="drawer-item-desc">从 CSV / Excel 导入任务</div>
+                <div className="drawer-item-label">{t("excel.importTitle")}</div>
+                <div className="drawer-item-desc">{t("excel.descImport")}</div>
               </div>
-              <div className="drawer-item-right">→</div>
+              <div className="drawer-item-right">
+                <span
+                  className="tag tag-pill"
+                  style={{ fontSize: 11, padding: "1px 6px", cursor: "pointer" }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    downloadTemplate();
+                  }}
+                >
+                  {t("excel.template")}
+                </span>
+              </div>
             </div>
-            <div className="drawer-item">
+            <div className="drawer-item" onClick={exportTasks} style={{ cursor: "pointer" }}>
               <div className="drawer-item-icon">
                 <svg className="icon icon-18" viewBox="0 0 24 24" fill="none">
                   <path
@@ -388,12 +250,21 @@ export default function SettingsDrawer() {
                 </svg>
               </div>
               <div className="drawer-item-content">
-                <div className="drawer-item-label">导出全部</div>
-                <div className="drawer-item-desc">备份所有任务数据到本地</div>
+                <div className="drawer-item-label">{t("excel.export")}</div>
+                <div className="drawer-item-desc">{t("excel.descExport")}</div>
               </div>
               <div className="drawer-item-right">→</div>
             </div>
-            <div className="drawer-item">
+            <div
+              className="drawer-item"
+              onClick={() => {
+                if (confirm(t("task.confirmDeleteAll").replace("{count}", String(useTaskStore.getState().tasks.length)))) {
+                  deleteAllTasks();
+                  showToast("All data cleared", "warning");
+                }
+              }}
+              style={{ cursor: "pointer" }}
+            >
               <div className="drawer-item-icon" style={{ borderColor: "var(--coral)" }}>
                 <svg className="icon icon-18" viewBox="0 0 24 24" fill="none">
                   <path
@@ -406,8 +277,8 @@ export default function SettingsDrawer() {
                 </svg>
               </div>
               <div className="drawer-item-content">
-                <div className="drawer-item-label">清除所有数据</div>
-                <div className="drawer-item-desc">删除全部任务和标签（不可撤销）</div>
+                <div className="drawer-item-label">{t("settings.clearAll")}</div>
+                <div className="drawer-item-desc">{t("settings.clearDesc")}</div>
               </div>
               <div className="drawer-item-right" style={{ color: "var(--coral)" }}>
                 ⚠
@@ -417,19 +288,19 @@ export default function SettingsDrawer() {
 
           {/* Notifications */}
           <div className="drawer-section">
-            <div className="drawer-section-title">通知</div>
-            {[
-              { label: t("settings.notifTaskReminder"), on: true },
-              { label: t("settings.notifDeadlinePush"), on: true },
-              { label: t("settings.notifSound"), on: false },
-              { label: t("settings.notifWebhook"), on: true },
-              { label: t("settings.notifPreRemind"), on: true },
-            ].map((item) => (
-              <div key={item.label} className="drawer-toggle-group">
+            <div className="drawer-section-title">{t("settings.notifications")}</div>
+            {([
+              { key: "taskReminder", label: t("settings.notifTaskReminder") },
+              { key: "deadlinePush", label: t("settings.notifDeadlinePush") },
+              { key: "sound", label: t("settings.notifSound") },
+              { key: "webhookPush", label: t("settings.notifWebhook") },
+              { key: "preRemind", label: t("settings.notifPreRemind") },
+            ] as Array<{ key: NotifToggle; label: string }>).map((item) => (
+              <div key={item.key} className="drawer-toggle-group">
                 <span className="drawer-toggle-label">{item.label}</span>
                 <div
-                  className={`drawer-toggle ${item.on ? "on" : ""}`}
-                  onClick={(e) => e.currentTarget.classList.toggle("on")}
+                  className={`drawer-toggle ${settings.toggles[item.key] ? "on" : ""}`}
+                  onClick={() => setToggle(item.key, !settings.toggles[item.key])}
                 />
               </div>
             ))}
@@ -437,8 +308,12 @@ export default function SettingsDrawer() {
 
           {/* About */}
           <div className="drawer-section">
-            <div className="drawer-section-title">关于</div>
-            <div className="drawer-item">
+            <div className="drawer-section-title">{t("settings.about")}</div>
+            <div
+              className="drawer-item"
+              onClick={() => window.open("https://github.com/niyongsheng/duckly", "_blank")}
+              style={{ cursor: "pointer" }}
+            >
               <div className="drawer-item-icon">
                 <svg className="icon icon-18" viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
@@ -451,12 +326,16 @@ export default function SettingsDrawer() {
                 </svg>
               </div>
               <div className="drawer-item-content">
-                <div className="drawer-item-label">使用帮助</div>
-                <div className="drawer-item-desc">查看文档和快捷键</div>
+                <div className="drawer-item-label">{t("settings.help")}</div>
+                <div className="drawer-item-desc">{t("settings.helpDesc")}</div>
               </div>
               <div className="drawer-item-right">→</div>
             </div>
-            <div className="drawer-item">
+            <div
+              className="drawer-item"
+              onClick={() => showToast(t("settings.updateDesc"), "success")}
+              style={{ cursor: "pointer" }}
+            >
               <div className="drawer-item-icon">
                 <svg className="icon icon-18" viewBox="0 0 24 24" fill="none">
                   <path
@@ -476,8 +355,8 @@ export default function SettingsDrawer() {
                 </svg>
               </div>
               <div className="drawer-item-content">
-                <div className="drawer-item-label">检查更新</div>
-                <div className="drawer-item-desc">v1.0.0 — 已是最新版本</div>
+                <div className="drawer-item-label">{t("settings.checkUpdate")}</div>
+                <div className="drawer-item-desc">{t("settings.updateDesc")}</div>
               </div>
               <div className="drawer-item-right">✓</div>
             </div>
@@ -512,8 +391,8 @@ export default function SettingsDrawer() {
                   </svg>
                 </div>
                 <div className="drawer-item-content">
-                  <div className="drawer-item-label">安装 App</div>
-                  <div className="drawer-item-desc">安装到设备桌面</div>
+                  <div className="drawer-item-label">{t("header.install")}</div>
+                  <div className="drawer-item-desc">{t("settings.installDesc")}</div>
                 </div>
                 <div className="drawer-item-right">↓</div>
               </div>
@@ -521,7 +400,7 @@ export default function SettingsDrawer() {
           </div>
         </div>
 
-        <div className="drawer-footer">Duckly v1.0.0 · 所有数据本地 OPFS 存储 · 离线可用</div>
+        <div className="drawer-footer">{t("settings.footer")}</div>
       </div>
     </>
   );

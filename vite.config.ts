@@ -5,8 +5,20 @@ import { VitePWA } from "vite-plugin-pwa";
 
 const base = process.env.VITE_BASE_URL || "/";
 
+const crossOriginHeaders = {
+  "Cross-Origin-Opener-Policy": "same-origin",
+  "Cross-Origin-Embedder-Policy": "require-corp",
+  "Cross-Origin-Resource-Policy": "same-origin",
+};
+
 export default defineConfig({
   base,
+  server: {
+    headers: crossOriginHeaders,
+  },
+  preview: {
+    headers: crossOriginHeaders,
+  },
   build: {
     rollupOptions: {
       output: {
@@ -38,8 +50,8 @@ export default defineConfig({
         start_url: base,
         scope: base,
         display: "standalone",
-        theme_color: "#FFF8F0",
-        background_color: "#FFF8F0",
+        theme_color: "#FEF4EB",
+        background_color: "#FEF4EB",
         categories: ["productivity", "utilities"],
         icons: [
           {

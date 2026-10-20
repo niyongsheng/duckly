@@ -3,14 +3,30 @@ import { runMigrations } from "./migrations";
 import type { Tag, Task, TaskCreate, TaskUpdate, DBNotification } from "./schema";
 
 // SQLite Worker Promiser type
-type PromiserFn = (
-  method: string,
-  opts: Record<string, unknown>,
-) => Promise<{
+type WorkerResult = {
   dbId?: string;
   resultRows?: Record<string, unknown>[];
+  message?: string;
   error?: string;
-}>;
+  [key: string]: unknown;
+};
+
+type WorkerResponse = {
+  type?: string;
+  dbId?: string;
+  result?: WorkerResult;
+  [key: string]: unknown;
+};
+
+type PromiserFn = (method: string, opts: Record<string, unknown>) => Promise<WorkerResponse>;
+
+function unwrapResponse(response: WorkerResponse): WorkerResult {
+  return response.result ?? (response as WorkerResult);
+}
+
+function isErrorResponse(response: WorkerResponse): boolean {
+  return response.type === "error" || Boolean(unwrapResponse(response).message);
+}
 
 let dbInstance: DatabaseClient | null = null;
 let promiser: PromiserFn | null = null;
@@ -25,30 +41,38 @@ export class DatabaseClient {
     this.dbId = dbId;
   }
 
-  async exec(sql: string): Promise<void> {
-    const result = await this.promiser("exec", {
+  private async run(sql: string, bind?: Record<string, unknown>): Promise<void> {
+    const response = await this.promiser("exec", {
       dbId: this.dbId,
       sql,
+      ...(bind ? { bind } : {}),
     });
-    if (result?.error) throw new Error(`SQL exec error: ${result.error}`);
+    if (isErrorResponse(response)) {
+      const result = unwrapResponse(response);
+      throw new Error(`SQL exec error: ${result.message ?? "unknown error"}`);
+    }
+  }
+
+  async exec(sql: string): Promise<void> {
+    await this.run(sql);
   }
 
   async query<T = Record<string, unknown>>(
     sql: string,
     params?: Record<string, unknown>,
   ): Promise<T[]> {
-    const result = await this.promiser("exec", {
+    const response = await this.promiser("exec", {
       dbId: this.dbId,
       sql,
       bind: params,
       rowMode: "object",
       resultRows: [],
     });
-    if (result?.error) {
-      console.error("[DB] query error:", result.error, "for SQL:", sql);
+    if (isErrorResponse(response)) {
+      console.error("[DB] query error:", unwrapResponse(response).message, "for SQL:", sql);
       return [];
     }
-    return (result?.resultRows as T[]) ?? [];
+    return (unwrapResponse(response).resultRows as T[]) ?? [];
   }
 
   async get<T = Record<string, unknown>>(
@@ -79,6 +103,43 @@ export class DatabaseClient {
     };
   }
 
+  private async getAllTagLinks(): Promise<Map<string, string[]>> {
+    const rows = await this.query<{ task_id: string; name: string }>(
+      `SELECT tt.task_id AS task_id, tg.name AS name
+       FROM task_tags tt
+       JOIN tags tg ON tg.id = tt.tag_id`,
+    );
+    const byTask = new Map<string, string[]>();
+    for (const row of rows) {
+      const list = byTask.get(row.task_id) ?? [];
+      list.push(row.name);
+      byTask.set(row.task_id, list);
+    }
+    return byTask;
+  }
+
+  private async getTaskTagNames(taskId: string): Promise<string[]> {
+    const rows = await this.query<{ name: string }>(
+      `SELECT tg.name AS name
+       FROM task_tags tt
+       JOIN tags tg ON tg.id = tt.tag_id
+       WHERE tt.task_id = $taskId`,
+      { $taskId: taskId },
+    );
+    return rows.map((row) => row.name);
+  }
+
+  private async replaceTaskTags(taskId: string, tagNames: string[]): Promise<void> {
+    await this.run("DELETE FROM task_tags WHERE task_id = $taskId", { $taskId: taskId });
+    for (const name of tagNames) {
+      await this.run(
+        `INSERT OR IGNORE INTO task_tags (task_id, tag_id)
+         SELECT $taskId, id FROM tags WHERE name = $tagName`,
+        { $taskId: taskId, $tagName: name },
+      );
+    }
+  }
+
   // ── Task CRUD ──
 
   async createTask(data: TaskCreate): Promise<Task> {
@@ -98,11 +159,10 @@ export class DatabaseClient {
       updatedAt: now,
     };
 
-    await this.promiser("exec", {
-      dbId: this.dbId,
-      sql: `INSERT INTO tasks (id, title, description, priority, status, start_date, due_date, repeat, created_at, updated_at)
+    await this.run(
+      `INSERT INTO tasks (id, title, description, priority, status, start_date, due_date, repeat, created_at, updated_at)
             VALUES ($id, $title, $description, $priority, $status, $startDate, $dueDate, $repeat, $createdAt, $updatedAt)`,
-      bind: {
+      {
         $id: task.id,
         $title: task.title,
         $description: task.description,
@@ -114,7 +174,9 @@ export class DatabaseClient {
         $createdAt: task.createdAt,
         $updatedAt: task.updatedAt,
       },
-    });
+    );
+
+    await this.replaceTaskTags(task.id, task.tags);
 
     return task;
   }
@@ -160,22 +222,18 @@ export class DatabaseClient {
       updates.push("updated_at = $updatedAt");
       bind.$updatedAt = now;
 
-      await this.promiser("exec", {
-        dbId: this.dbId,
-        sql: `UPDATE tasks SET ${updates.join(", ")} WHERE id = $id`,
-        bind,
-      });
+      await this.run(`UPDATE tasks SET ${updates.join(", ")} WHERE id = $id`, bind);
+    }
+
+    if (data.tags !== undefined) {
+      await this.replaceTaskTags(id, data.tags);
     }
 
     return this.getTask(id);
   }
 
   async deleteTask(id: string): Promise<boolean> {
-    await this.promiser("exec", {
-      dbId: this.dbId,
-      sql: "DELETE FROM tasks WHERE id = $id",
-      bind: { $id: id },
-    });
+    await this.run("DELETE FROM tasks WHERE id = $id", { $id: id });
     return true;
   }
 
@@ -202,12 +260,15 @@ export class DatabaseClient {
     const row = await this.get<Record<string, unknown>>("SELECT * FROM tasks WHERE id = $id", {
       $id: id,
     });
-    return row ? this.mapTask(row) : null;
+    if (!row) return null;
+    const tags = await this.getTaskTagNames(id);
+    return this.mapTask({ ...row, tags });
   }
 
   async getAllTasks(): Promise<Task[]> {
     const rows = await this.query<Record<string, unknown>>("SELECT * FROM tasks ORDER BY created_at DESC");
-    return rows.map((r) => this.mapTask(r));
+    const tagsByTask = await this.getAllTagLinks();
+    return rows.map((r) => this.mapTask({ ...r, tags: tagsByTask.get(r.id as string) ?? [] }));
   }
 
   async getTasksByPriority(priority: string): Promise<Task[]> {
@@ -215,7 +276,8 @@ export class DatabaseClient {
       "SELECT * FROM tasks WHERE priority = $priority ORDER BY created_at DESC",
       { $priority: priority },
     );
-    return rows.map((r) => this.mapTask(r));
+    const tagsByTask = await this.getAllTagLinks();
+    return rows.map((r) => this.mapTask({ ...r, tags: tagsByTask.get(r.id as string) ?? [] }));
   }
 
   async getTasksByStatus(status: string): Promise<Task[]> {
@@ -223,7 +285,8 @@ export class DatabaseClient {
       "SELECT * FROM tasks WHERE status = $status ORDER BY created_at DESC",
       { $status: status },
     );
-    return rows.map((r) => this.mapTask(r));
+    const tagsByTask = await this.getAllTagLinks();
+    return rows.map((r) => this.mapTask({ ...r, tags: tagsByTask.get(r.id as string) ?? [] }));
   }
 
   // ── Tag CRUD ──
@@ -233,17 +296,16 @@ export class DatabaseClient {
     const now = new Date().toISOString();
     const tag: Tag = { id, name, color, createdAt: now, isSeed: isSeed ? 1 : 0 };
 
-    await this.promiser("exec", {
-      dbId: this.dbId,
-      sql: "INSERT INTO tags (id, name, color, created_at, is_seed) VALUES ($id, $name, $color, $createdAt, $isSeed)",
-      bind: {
+    await this.run(
+      "INSERT INTO tags (id, name, color, created_at, is_seed) VALUES ($id, $name, $color, $createdAt, $isSeed)",
+      {
         $id: tag.id,
         $name: tag.name,
         $color: tag.color,
         $createdAt: tag.createdAt,
         $isSeed: tag.isSeed ?? 0,
       },
-    });
+    );
 
     return tag;
   }
@@ -253,19 +315,12 @@ export class DatabaseClient {
   }
 
   async deleteTag(id: string): Promise<boolean> {
-    await this.promiser("exec", {
-      dbId: this.dbId,
-      sql: "DELETE FROM tags WHERE id = $id",
-      bind: { $id: id },
-    });
+    await this.run("DELETE FROM tags WHERE id = $id", { $id: id });
     return true;
   }
 
   async deleteAllTasks(): Promise<void> {
-    await this.promiser("exec", {
-      dbId: this.dbId,
-      sql: "DELETE FROM tasks",
-    });
+    await this.run("DELETE FROM tasks");
   }
 
   // ── Notification CRUD ──
@@ -283,40 +338,29 @@ export class DatabaseClient {
     type: string;
     createdAt: string;
   }): Promise<void> {
-    await this.promiser("exec", {
-      dbId: this.dbId,
-      sql: `INSERT INTO notifications (id, task_id, task_title, type, read, created_at)
+    await this.run(
+      `INSERT INTO notifications (id, task_id, task_title, type, read, created_at)
             VALUES ($id, $taskId, $taskTitle, $type, 0, $createdAt)`,
-      bind: {
+      {
         $id: data.id,
         $taskId: data.taskId,
         $taskTitle: data.taskTitle,
         $type: data.type,
         $createdAt: data.createdAt,
       },
-    });
+    );
   }
 
   async markNotificationRead(id: string): Promise<void> {
-    await this.promiser("exec", {
-      dbId: this.dbId,
-      sql: "UPDATE notifications SET read = 1 WHERE id = $id",
-      bind: { $id: id },
-    });
+    await this.run("UPDATE notifications SET read = 1 WHERE id = $id", { $id: id });
   }
 
   async markAllNotificationsRead(): Promise<void> {
-    await this.promiser("exec", {
-      dbId: this.dbId,
-      sql: "UPDATE notifications SET read = 1 WHERE read = 0",
-    });
+    await this.run("UPDATE notifications SET read = 1 WHERE read = 0");
   }
 
   async deleteAllNotifications(): Promise<void> {
-    await this.promiser("exec", {
-      dbId: this.dbId,
-      sql: "DELETE FROM notifications",
-    });
+    await this.run("DELETE FROM notifications");
   }
 
   async getUnreadCount(): Promise<number> {
@@ -338,29 +382,50 @@ export class DatabaseClient {
   }
 }
 
-export async function initDatabase(): Promise<DatabaseClient> {
-  if (dbInstance) return dbInstance;
-
+async function openDatabase(): Promise<DatabaseClient> {
   const factory = await sqlite3Worker1Promiser();
   promiser = factory as PromiserFn;
 
   // Open database with OPFS persistence
   const p = promiser; // TS narrows after assignment
-  const dbResult = await p("open", {
-    filename: "duckly.db",
-  });
-  currentDbId = dbResult.dbId ?? "default";
+  let openResponse: WorkerResponse;
+  try {
+    openResponse = await p("open", {
+      filename: "duckly.db",
+      vfs: "opfs",
+    });
+  } catch (err) {
+    console.warn("[DB] OPFS unavailable, falling back to default VFS:", JSON.stringify(err));
+    openResponse = await p("open", {
+      filename: "duckly.db",
+    });
+  }
+  const openResult = unwrapResponse(openResponse);
+  currentDbId = openResult.dbId ?? openResponse.dbId ?? "default";
 
   dbInstance = new DatabaseClient(p, currentDbId);
 
   // Run migrations
   await runMigrations(async (sql: string) => {
-    await p("exec", { dbId: currentDbId, sql });
+    await dbInstance!.exec(sql);
   });
 
   // Column mapping (snake_case → camelCase + default tags) handled in `mapTask()`.
 
   return dbInstance;
+}
+
+let dbInitPromise: Promise<DatabaseClient> | null = null;
+
+export function initDatabase(): Promise<DatabaseClient> {
+  if (dbInstance) return Promise.resolve(dbInstance);
+  if (!dbInitPromise) {
+    dbInitPromise = openDatabase().catch((err) => {
+      dbInitPromise = null;
+      throw err;
+    });
+  }
+  return dbInitPromise;
 }
 
 export function getDatabase(): DatabaseClient | null {

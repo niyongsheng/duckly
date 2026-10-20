@@ -39,14 +39,6 @@ export default function SettingsDrawer() {
     localStorage.setItem("duckly-dark-mode", darkMode ? "1" : "0");
   }, [darkMode]);
 
-  // Restore dark mode preference on mount
-  useEffect(() => {
-    const saved = localStorage.getItem("duckly-dark-mode");
-    if (saved === "1") {
-      setDarkMode(true);
-    }
-  }, [setDarkMode]);
-
   // Close on Escape
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -78,7 +70,7 @@ export default function SettingsDrawer() {
             </svg>
             {t("settings.title")}
           </div>
-          <button className="drawer-close" onClick={closeSettings}>
+          <button className="drawer-close" onClick={closeSettings} aria-label="Close settings">
             <svg className="icon icon-18" viewBox="0 0 24 24" fill="none">
               <path
                 d="M6 6l12 12M18 6l-12 12"
@@ -242,7 +234,7 @@ export default function SettingsDrawer() {
                                 gap: 6,
                                 fontSize: 11,
                                 padding: "3px 0",
-                                borderBottom: "1px solid var(--border-light)",
+                                borderBottom: "1px solid var(--light-gray)",
                               }}
                             >
                               <span
@@ -250,7 +242,7 @@ export default function SettingsDrawer() {
                                   width: 6,
                                   height: 6,
                                   borderRadius: "50%",
-                                  background: log.success ? "var(--green)" : "var(--coral)",
+                                  background: log.success ? "var(--success)" : "var(--coral)",
                                   flexShrink: 0,
                                 }}
                               />
@@ -273,7 +265,7 @@ export default function SettingsDrawer() {
                               </span>
                               <span
                                 style={{
-                                  color: log.success ? "var(--green)" : "var(--coral)",
+                                  color: log.success ? "var(--success)" : "var(--coral)",
                                   flexShrink: 0,
                                 }}
                               >

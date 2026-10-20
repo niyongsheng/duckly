@@ -39,6 +39,9 @@ interface UIState {
   setFilterStatus: (status: string | null) => void;
 }
 
+const savedDarkMode =
+  typeof localStorage !== "undefined" && localStorage.getItem("duckly-dark-mode") === "1";
+
 export const useUIStore = create<UIState>((set) => ({
   viewMode: "calendar",
   duckMood: "neutral",
@@ -47,7 +50,7 @@ export const useUIStore = create<UIState>((set) => ({
   showSettings: false,
   showNotifications: false,
   showStatsModal: false,
-  darkMode: false,
+  darkMode: savedDarkMode,
   calendarMode: "month",
   aiChannelOpen: false,
   aiPermission: "readonly",

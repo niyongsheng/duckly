@@ -138,7 +138,7 @@ export default function Header() {
           {/* Add task button */}
           <button className="btn btn-primary btn-small" onClick={() => openTaskForm()}>
             <svg className="icon icon-16" viewBox="0 0 24 24" fill="none">
-              <path d="M12 4v16M4 12h16" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+              <path d="M12 4v16M4 12h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
             {t("header.newTask")}
           </button>
@@ -147,6 +147,7 @@ export default function Header() {
           <div style={{ position: "relative" }}>
             <button
               className="notif-btn"
+              aria-label={t("notif.title")}
               onClick={(e) => {
                 e.stopPropagation();
                 toggleNotifications();

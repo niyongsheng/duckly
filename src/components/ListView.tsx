@@ -61,7 +61,7 @@ export default function ListView() {
         >
           <h3 style={{ fontSize: 24, fontWeight: 700 }}>{t("list.title")}</h3>
           <div style={{ display: "flex", gap: "var(--space-3)", flexWrap: "wrap" }}>
-            <div style={{ display: "flex", gap: 0 }}>
+            <div style={{ display: "flex", gap: "var(--space-2)" }}>
               <input
                 className="form-input"
                 placeholder={t("task.search")}
@@ -72,7 +72,7 @@ export default function ListView() {
               />
               <button
                 className="btn btn-small"
-                style={{ borderLeft: "none" }}
+                aria-label={t("task.search")}
                 onClick={handleSearch}
               >
                 <svg className="icon icon-16" viewBox="0 0 24 24" fill="none">

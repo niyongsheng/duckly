@@ -890,23 +890,31 @@ function CalendarSidebar({
         </div>
         <div className="tag-group">
           <span
-            className="tag tag-pill"
+            className="tag tag-pill tag-accent"
             style={{
               background: "var(--coral)",
-              color: "var(--white)",
               borderColor: "var(--coral)",
               cursor: "pointer",
             }}
           >
             {t("list.filterUrgent")}
           </span>
-          <span className="tag tag-pill" style={{ background: "var(--blue)", cursor: "pointer" }}>
+          <span
+            className="tag tag-pill tag-accent"
+            style={{ background: "var(--blue)", cursor: "pointer" }}
+          >
             {t("list.filterImportant")}
           </span>
-          <span className="tag tag-pill" style={{ background: "var(--yellow)", cursor: "pointer" }}>
+          <span
+            className="tag tag-pill tag-accent"
+            style={{ background: "var(--yellow)", cursor: "pointer" }}
+          >
             {t("list.filterInProgress")}
           </span>
-          <span className="tag tag-pill" style={{ background: "var(--cyan)", cursor: "pointer" }}>
+          <span
+            className="tag tag-pill tag-accent"
+            style={{ background: "var(--cyan)", cursor: "pointer" }}
+          >
             {t("list.filterDone")}
           </span>
         </div>

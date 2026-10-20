@@ -60,7 +60,7 @@ export default function TagManagement() {
         {tags.map((tag) => (
           <span
             key={tag.id}
-            className="tag tag-pill"
+            className="tag tag-pill tag-accent"
             style={{ background: tag.color, cursor: "pointer", position: "relative" }}
             title="点击删除"
             onClick={(e) => handleDelete(e, tag.id, tag.name)}

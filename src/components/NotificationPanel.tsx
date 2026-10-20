@@ -19,26 +19,26 @@ function getTypeIcon(type: string) {
     case "deadline_overdue":
       return (
         <svg className="icon" viewBox="0 0 24 24" fill="none" style={{ width: 14, height: 14 }}>
-          <circle cx="12" cy="12" r="9" stroke="#fff" strokeWidth="2" />
-          <path d="M12 8v4M12 16h0" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+          <path d="M12 8v4M12 16h0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
       );
     case "task_completed":
       return (
         <svg className="icon" viewBox="0 0 24 24" fill="none" style={{ width: 14, height: 14 }}>
-          <path d="M9 11l3 3L22 4" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M9 11l3 3L22 4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       );
     case "task_created":
       return (
         <svg className="icon" viewBox="0 0 24 24" fill="none" style={{ width: 14, height: 14 }}>
-          <path d="M12 5v14M5 12h14" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+          <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
       );
     case "deadline_changed":
       return (
         <svg className="icon" viewBox="0 0 24 24" fill="none" style={{ width: 14, height: 14 }}>
-          <path d="M15.232 5.232l3.536 3.536M9 11l7.5-7.5a2 2 0 012.828 0l1.172 1.172a2 2 0 010 2.828L11 17H7v-4l8.5-8.5z" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M15.232 5.232l3.536 3.536M9 11l7.5-7.5a2 2 0 012.828 0l1.172 1.172a2 2 0 010 2.828L11 17H7v-4l8.5-8.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       );
     default:

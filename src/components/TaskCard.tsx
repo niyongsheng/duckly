@@ -30,7 +30,7 @@ export default function TaskCard({ task }: TaskCardProps) {
           style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", marginBottom: 2 }}
         >
           <span
-            className="tag tag-pill"
+            className="tag tag-pill tag-accent"
             style={{
               fontSize: 10,
               padding: "1px 6px",
@@ -75,7 +75,7 @@ export default function TaskCard({ task }: TaskCardProps) {
               <span
                 key={tag}
                 className="tag tag-pill"
-                style={{ fontSize: 10, padding: "1px 6px", background: "var(--bg-page)" }}
+                style={{ fontSize: 10, padding: "1px 6px" }}
               >
                 {tag}
               </span>
@@ -84,7 +84,11 @@ export default function TaskCard({ task }: TaskCardProps) {
         )}
       </div>
       <div className="task-actions">
-        <button className="task-btn-edit" onClick={() => openTaskForm(task.id)}>
+        <button
+          className="task-btn-edit"
+          aria-label={t("task.edit")}
+          onClick={() => openTaskForm(task.id)}
+        >
           <svg className="icon icon-16" viewBox="0 0 24 24" fill="none">
             <path
               d="M15.232 5.232l3.536 3.536M9 11l7.5-7.5a2 2 0 0 1 2.828 0l1.172 1.172a2 2 0 0 1 0 2.828L11 17H7v-4l8.5-8.5z"
@@ -97,6 +101,7 @@ export default function TaskCard({ task }: TaskCardProps) {
         </button>
         <button
           className="task-btn-delete"
+          aria-label={t("task.delete")}
           onClick={async () => {
             const ok = await confirm({ message: t("task.confirmDelete") });
             if (ok) deleteTask(task.id);

@@ -36,7 +36,7 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = "11
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0"
-            style={{ background: "rgba(56,56,56,0.5)" }}
+            style={{ background: "var(--overlay)" }}
             onClick={onClose}
           />
           {/* Content */}
@@ -49,7 +49,9 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = "11
             className="relative"
             style={{
               background: "var(--bg-card)",
-              border: "var(--border-default)",
+              border: "var(--border-strong)",
+              borderRadius: "var(--radius-xl)",
+              boxShadow: "var(--shadow-brutal-lg)",
               maxWidth,
               width: "100%",
               maxHeight: "90vh",
@@ -63,6 +65,8 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = "11
                 padding: compact ? "var(--space-3) var(--space-4)" : "var(--space-8) var(--space-8) var(--space-6)",
                 background: "var(--bg-card)",
                 borderBottom: "var(--border-default)",
+                borderTopLeftRadius: "var(--radius-xl)",
+                borderTopRightRadius: "var(--radius-xl)",
               }}
             >
               <h2 style={compact ? { fontSize: 20, fontWeight: 700, letterSpacing: "-0.025em", color: "var(--dark-gray)" } : undefined} className={compact ? undefined : "modal-title"}>{title}</h2>

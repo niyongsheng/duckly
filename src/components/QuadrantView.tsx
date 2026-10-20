@@ -96,7 +96,7 @@ function QuadrantColumn({
   return (
     <div
       ref={setNodeRef}
-      className="quadrant-card"
+      className={`quadrant-card ${raw.dotColor}`}
       style={
         isOver
           ? {

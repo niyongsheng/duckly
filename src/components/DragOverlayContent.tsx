@@ -20,7 +20,7 @@ export default function DragOverlayContent({ task }: DragOverlayContentProps) {
       }}
     >
       <span
-        className="tag tag-pill"
+        className="tag tag-pill tag-accent"
         style={{
           background: accentColor,
           fontSize: 10,

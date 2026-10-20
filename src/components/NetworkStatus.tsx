@@ -10,15 +10,15 @@ export default function NetworkStatus() {
       <svg className="icon icon-16" viewBox="0 0 24 24" fill="none">
         {isOffline ? (
           <>
-            <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="#FF6B6B" />
-            <path d="M8 8l8 8M16 8l-8 8" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+            <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="var(--coral)" />
+            <path d="M8 8l8 8M16 8l-8 8" stroke="var(--text-on-accent)" strokeWidth="2" strokeLinecap="round" />
           </>
         ) : (
           <>
-            <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="#4DD4D0" />
+            <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="var(--cyan)" />
             <path
               d="M9 12l2 2 4-4"
-              stroke="#fff"
+              stroke="var(--text-on-accent)"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"

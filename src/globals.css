@@ -40,7 +40,11 @@
   --text-primary: var(--dark-gray);
   --text-secondary: var(--medium-gray);
   --text-on-accent: #1e1a11;
+  /* Brand mark colors stay fixed so the logo reads the same in dark mode */
+  --logo-ink: #1e1a11;
   --logo-white: #fffdf8;
+  --logo-body: #ffe769;
+  --logo-beak: #fc6c6b;
   --success: #1f8a76;
 
   /* Font */

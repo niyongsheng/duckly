@@ -2702,6 +2702,38 @@ body {
     font-size: 9px;
     padding: 1px 2px;
   }
+
+  /* Fit all seven days of the week view without horizontal scrolling */
+  .week-grid {
+    grid-template-columns: 56px repeat(7, 1fr);
+  }
+  .week-time-cell {
+    min-height: 48px;
+    padding: 2px;
+    font-size: 9px;
+  }
+  .week-day-header {
+    padding: 4px 2px;
+    min-height: 48px;
+  }
+  .week-day-header .wd-name {
+    font-size: 10px;
+  }
+  .week-day-header .wd-date {
+    font-size: 15px;
+  }
+  .week-day-header.today .wd-date {
+    width: 26px;
+    height: 26px;
+  }
+  .week-day-col {
+    min-height: 48px;
+    padding: 2px;
+  }
+  .week-task {
+    font-size: 9px;
+    padding: 2px 3px;
+  }
 }
 
 /* ── Toast ── */
@@ -2803,22 +2835,138 @@ body {
   }
   .app-header .header-row {
     flex-direction: column;
+    flex-wrap: nowrap;
     align-items: stretch;
+    gap: var(--space-3);
   }
   .header-left {
     flex-direction: column;
     align-items: stretch;
     gap: var(--space-3);
+    min-width: 0;
   }
   .logo-group {
     width: fit-content;
   }
+  .header-right {
+    gap: var(--space-2);
+    min-width: 0;
+  }
+  /* Push language / notifications / settings to the right edge */
+  .header-right .btn-primary {
+    margin-right: auto;
+  }
   .header-left .tab-bar {
+    width: 100%;
+    max-width: 100%;
+    justify-content: space-between;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
   .header-left .tab-bar .tab-btn {
     flex-shrink: 0;
+  }
+
+  /* Calendar header: arrows + title + today on one row, mode tabs below */
+  .calendar-header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+  .calendar-header .calendar-nav {
+    display: contents;
+  }
+  .calendar-header .calendar-nav-btn {
+    width: 40px;
+    height: 40px;
+  }
+  .calendar-header .calendar-nav-btn:first-child {
+    grid-area: 1 / 1;
+  }
+  .calendar-header .calendar-month-year {
+    grid-area: 1 / 2;
+    min-width: 0;
+    font-size: 22px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .calendar-header .calendar-nav-btn:nth-child(3) {
+    grid-area: 1 / 3;
+  }
+  .calendar-header .calendar-today-btn {
+    grid-area: 1 / 4;
+    padding: 8px 14px;
+  }
+  .calendar-header > .tab-bar {
+    grid-area: 2 / 1 / 3 / -1;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .calendar-header > .tab-bar .tab-btn {
+    flex-shrink: 0;
+  }
+
+  /* The notification popover is anchored to the bell, which sits too far
+     from the edge of the screen; center it on phones instead. */
+  .notif-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    right: auto;
+    margin-top: 0;
+    transform: translate(-50%, -50%);
+    width: min(340px, calc(100vw - 32px));
+    max-height: 70vh;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Drop tab icons so all four tabs fit without horizontal scrolling */
+  .tab-bar .tab-btn,
+  .header-left .tab-bar .tab-btn {
+    gap: var(--space-1);
+    padding: 8px 10px;
+  }
+  .tab-bar .tab-btn .icon {
+    display: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .calendar-header .calendar-month-year {
+    font-size: 18px;
+  }
+  .calendar-header .calendar-today-btn {
+    padding: 8px 10px;
+  }
+  .tab-bar .tab-btn,
+  .header-left .tab-bar .tab-btn {
+    padding: 8px 8px;
+  }
+}
+
+@media (max-width: 360px) {
+  /* Keep the header action row on a single line on narrow phones */
+  .header-right .btn-small {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  .header-right .dropdown-toggle {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .header-right .dropdown-toggle > .icon:last-child {
+    display: none;
+  }
+}
+
+@media (max-width: 340px) {
+  .calendar-header .calendar-today-label {
+    display: none;
   }
 }
 

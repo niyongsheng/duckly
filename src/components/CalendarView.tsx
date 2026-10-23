@@ -398,7 +398,7 @@ export default function CalendarView() {
                 <rect x="10" y="6" width="4" height="12" rx="1" fill="currentColor" opacity="0.6" />
                 <rect x="6" y="10" width="12" height="4" rx="1" fill="currentColor" opacity="0.6" />
               </svg>
-              {t("calendar.today")}
+              <span className="calendar-today-label">{t("calendar.today")}</span>
             </button>
           </div>
 

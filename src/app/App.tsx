@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useAptabase } from "@aptabase/react";
+import { useEffect, useRef } from "react";
 import { initAIChannel } from "../ai/channel";
 import { useI18n } from "../i18n/config";
 import BarChart from "../components/BarChart";
@@ -23,7 +24,8 @@ import { useNotificationStore } from "../stores/useNotificationStore";
 import { useUIStore } from "../stores/useUIStore";
 
 export default function App() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const { trackEvent } = useAptabase();
   useReminder();
   const loadTasks = useTaskStore((s) => s.loadTasks);
   const viewMode = useUIStore((s) => s.viewMode);
@@ -31,6 +33,21 @@ export default function App() {
 
   const loadTags = useTagStore((s) => s.loadTags);
   const loadNotifications = useNotificationStore((s) => s.loadNotifications);
+
+  const appStartedRef = useRef(false);
+  const lastViewRef = useRef(viewMode);
+
+  useEffect(() => {
+    if (appStartedRef.current) return;
+    appStartedRef.current = true;
+    trackEvent("app_start", { locale, view: viewMode });
+  }, [trackEvent, locale, viewMode]);
+
+  useEffect(() => {
+    if (lastViewRef.current === viewMode) return;
+    lastViewRef.current = viewMode;
+    trackEvent("view_change", { view: viewMode });
+  }, [trackEvent, viewMode]);
 
   useEffect(() => {
     loadTasks();

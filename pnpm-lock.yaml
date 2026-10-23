@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@aptabase/react':
+        specifier: ^0.4.0
+        version: 0.4.0(react@19.2.8)
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -80,6 +83,11 @@ packages:
     engines: {node: '>=10'}
     peerDependencies:
       ajv: '>=8'
+
+  '@aptabase/react@0.4.0':
+    resolution: {integrity: sha512-N82DYXT1iioHbdSyWmfek65Lw+XXcfv8bChlS/TwBvWJ3z2lCBZLDQfqCo/d5PEADQobpJ/SkSILZhAtIlgoPg==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
 
   '@babel/code-frame@7.29.7':
     resolution: {integrity: sha512-Aup7aUOfpbAUg2ROOJN6Iw5f9DMBlzu0mIkm/malLQFN/YQgO48wCj0Kxa3sEHJvPVFg7siR+qRInwXd2qhQKw==}
@@ -2307,6 +2315,10 @@ snapshots:
       ajv: 8.20.0
       jsonpointer: 5.0.1
       leven: 3.1.0
+
+  '@aptabase/react@0.4.0(react@19.2.8)':
+    dependencies:
+      react: 19.2.8
 
   '@babel/code-frame@7.29.7':
     dependencies:

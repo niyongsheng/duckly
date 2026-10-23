@@ -319,6 +319,22 @@ body {
   font-size: 12px;
 }
 
+/* Native select rendered as a pill, with a custom chevron so the
+   arrow keeps a comfortable margin from the right edge */
+.filter-select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 38px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%231e1a11' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 14px 14px;
+}
+
+:root.dark .filter-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%23f4ebdd' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
 /* ── Form Input ── */
 .form-input {
   display: block;
@@ -1113,6 +1129,7 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
+  pointer-events: none;
 }
 
 /* ── Calendar Views ── */
@@ -2023,7 +2040,6 @@ body {
   background: var(--bg-card);
   border-left: var(--border-strong);
   border-radius: var(--radius-xl) 0 0 var(--radius-xl);
-  box-shadow: var(--shadow-brutal-left);
   z-index: 70;
   transform: translateX(100%);
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -2034,6 +2050,9 @@ body {
 
 .drawer.open {
   transform: translateX(0);
+  /* Only cast the shadow while visible; otherwise the off-canvas drawer
+     leaves a 6px black strip along the right edge of the viewport. */
+  box-shadow: var(--shadow-brutal-left);
 }
 
 .drawer-header {

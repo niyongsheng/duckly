@@ -87,7 +87,7 @@ export default function ListView() {
               </button>
             </div>
             <select
-              className="btn btn-small"
+              className="btn btn-small filter-select"
               value={filterPriority ?? ""}
               onChange={(e) => {
                 setFilterPriority(e.target.value || null);
@@ -102,7 +102,7 @@ export default function ListView() {
               <option value="not-urgent-not-important">{t("priority.not-urgent-not-important")}</option>
             </select>
             <select
-              className="btn btn-small"
+              className="btn btn-small filter-select"
               value={filterStatus ?? ""}
               onChange={(e) => {
                 setFilterStatus(e.target.value || null);
